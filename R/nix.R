@@ -88,6 +88,11 @@ assertthat::on_failure(is_nix2_params) <- function(call, env) {
 d_nix2_predict <- function(x, p, log=FALSE) {
   assert_that(is_nix2_params(p))
   scale <- with(p, sqrt((1+kappa) * sigma2 / kappa))
-  dt((x-p$mu)/scale, df = p$nu, log=log)
+  log_p <- dt((x-p$mu)/scale, df = p$nu, log=TRUE) - log(scale)
+  if (log) {
+    return(log_p)
+  } else {
+    return(exp(log_p))
+  }
 }
 
