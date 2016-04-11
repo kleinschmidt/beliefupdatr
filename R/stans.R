@@ -16,7 +16,15 @@ model_filename <- function(model_name) {
 #'
 #' @param model_name (Relative) filename of model
 #' @export
-compile_stan <- function(model_name) {
-  rstan::stan(model_filename(model_name))
+compile_stan <- function(model_name, ...) {
+  rstan::stan(model_filename(model_name), chains=0, ...)
 }
 
+#' List the included models
+#'
+#' These can be passed to model_filename or compile_stan
+#'
+#' @export
+list_models <- function() {
+  basename(Sys.glob(model_filename('*.stan')))
+}

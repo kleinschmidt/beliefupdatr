@@ -4,7 +4,7 @@
 \alias{compile_stan}
 \title{Compile an included Stan model}
 \usage{
-compile_stan(model_name)
+compile_stan(model_name, ...)
 }
 \arguments{
 \item{model_name}{(Relative) filename of model}

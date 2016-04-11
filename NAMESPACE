@@ -3,6 +3,7 @@
 export(compile_stan)
 export(d_nix2_predict)
 export(is_nix2_params)
+export(list_models)
 export(model_filename)
 export(nix2_params)
 export(nix2_update)
