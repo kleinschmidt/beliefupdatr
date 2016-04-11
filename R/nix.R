@@ -35,10 +35,10 @@ nix2_update <- function(x=NA, p=list(nu=0, kappa=0, mu=0, sigma2=0),
 
 #' Wrap parameters into a list for updating etc.
 #'
-#' @param mu
-#' @param sigma2
-#' @param kappa
-#' @param nu
+#' @param mu Mean
+#' @param sigma2 Variance
+#' @param kappa Mean prior pseudocount
+#' @param nu Variance prior pseudocount
 #'
 #' @export
 nix2_params <- function(...) {
