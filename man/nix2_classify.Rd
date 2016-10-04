@@ -11,8 +11,8 @@ nix2_classify(x, ps, category = 1:length(ps))
 
 \item{ps}{List of category Norma-Chi^-2 params}
 
-\item{cat}{(Optional) Which categories' posteriors to return. If missing, all
-are returned}
+\item{category}{(Optional) Which categories' posteriors to return. If
+missing, all are returned}
 }
 \value{
 A length(x)-by-category matrix of posterior probabilities

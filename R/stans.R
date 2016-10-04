@@ -5,6 +5,7 @@
 #' specified paths to a model
 #'
 #' @param model_name (Relative) filename of model
+#' 
 #' @export
 model_filename <- function(model_name) {
   file.path(devtools::inst('beliefupdatr'),
@@ -15,6 +16,8 @@ model_filename <- function(model_name) {
 #' Compile an included Stan model
 #'
 #' @param model_name (Relative) filename of model
+#' @param ... Additional arguments are passed to \code{rstan::stan}
+#' 
 #' @export
 compile_stan <- function(model_name, ...) {
   rstan::stan(model_filename(model_name), chains=0, ...)

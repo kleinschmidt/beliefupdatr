@@ -1,5 +1,6 @@
 #' @import assertthat
 #' @import purrr
+#' @importFrom stats dt var
 NULL
 
 #' Conjugate updating of Normal-Chi^-2 parameters
@@ -45,8 +46,8 @@ nix2_update <- function(x=NA, p=list(nu=0, kappa=0, mu=0, sigma2=0),
 #' @param nu Variance prior pseudocount
 #'
 #' @export
-nix2_params <- function(...) {
-  p <- list(...)
+nix2_params <- function(mu, sigma2, kappa, nu) {
+  p <- list(mu=mu, sigma2=sigma2, kappa=kappa, nu=nu)
   assert_that(is_nix2_params(p))
   return(p)
 }
@@ -107,8 +108,8 @@ d_nix2_predict <- function(x, p, log=FALSE) {
 #'
 #' @param x Vector of points to classify
 #' @param ps List of category Norma-Chi^-2 params
-#' @param cat (Optional) Which categories' posteriors to return. If missing, all
-#' are returned
+#' @param category (Optional) Which categories' posteriors to return. If
+#'   missing, all are returned
 #'
 #' @return A length(x)-by-category matrix of posterior probabilities
 #'

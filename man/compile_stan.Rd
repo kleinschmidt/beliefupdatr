@@ -8,6 +8,8 @@ compile_stan(model_name, ...)
 }
 \arguments{
 \item{model_name}{(Relative) filename of model}
+
+\item{...}{Additional arguments are passed to \code{rstan::stan}}
 }
 \description{
 Compile an included Stan model

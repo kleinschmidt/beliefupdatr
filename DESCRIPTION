@@ -8,7 +8,12 @@ Depends:
     R (>= 3.2.3)
 Imports:
     purrr,
-    assertthat
+    assertthat,
+    devtools,
+    daver,
+    rstan
+Remotes:
+    kleinschmidt/daver
 License: MIT
 LazyData: true
 RoxygenNote: 5.0.1

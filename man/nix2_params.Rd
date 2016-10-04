@@ -4,7 +4,7 @@
 \alias{nix2_params}
 \title{Wrap parameters into a list for updating etc.}
 \usage{
-nix2_params(...)
+nix2_params(mu, sigma2, kappa, nu)
 }
 \arguments{
 \item{mu}{Mean}
