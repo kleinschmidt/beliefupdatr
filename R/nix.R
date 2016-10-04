@@ -9,9 +9,9 @@ NULL
 #' \href{https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf}{Murphy (2008;
 #' University of British Columbia)}.
 #'
+#' @param p named list of distribution parameters (mu, sigma2, nu, and kappa)
 #' @param x vector of observations to update with (optional if summary stats
 #' are passed)
-#' @param p named list of distribution parameters (mu, sigma2, nu, and kappa)
 #' @param n number of observations (overrides x)
 #' @param xbar observed mean (overrides x)
 #' @param ss observed sum of squares (overrides x and s2)
@@ -19,7 +19,8 @@ NULL
 #'
 #' @return Updated parameter vector.
 #' @export
-nix2_update <- function(x=NA, p=list(nu=0, kappa=0, mu=0, sigma2=0), 
+nix2_update <- function(p=list(nu=0, kappa=0, mu=0, sigma2=0),
+                        x=NA,
                         n=length(x), 
                         xbar=mean(x),
                         ss=s2*(n-1),

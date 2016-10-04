@@ -4,14 +4,14 @@
 \alias{nix2_update}
 \title{Conjugate updating of Normal-Chi^-2 parameters}
 \usage{
-nix2_update(x = NA, p = list(nu = 0, kappa = 0, mu = 0, sigma2 = 0),
+nix2_update(p = list(nu = 0, kappa = 0, mu = 0, sigma2 = 0), x = NA,
   n = length(x), xbar = mean(x), ss = s2 * (n - 1), s2 = var(x))
 }
 \arguments{
+\item{p}{named list of distribution parameters (mu, sigma2, nu, and kappa)}
+
 \item{x}{vector of observations to update with (optional if summary stats
 are passed)}
-
-\item{p}{named list of distribution parameters (mu, sigma2, nu, and kappa)}
 
 \item{n}{number of observations (overrides x)}
 

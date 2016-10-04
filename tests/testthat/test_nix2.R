@@ -14,20 +14,20 @@ test_that("Invalid NIX2 parameters are rejected", {
 p0 <- nix2_params(mu=0, sigma2=1, kappa=1, nu=1)
 
 test_that("Updating works for single data point", {
-  p <- nix2_update(0, p0)
+  p <- nix2_update(p0, 0)
   expect_false(any(is.na(p)))
 })
 
 test_that("Incremental and batch updating equivalent", {
   x <- rnorm(1000)
-  expect_equal(reduce(x, ~ nix2_update(x=.y, p=.x), .init = p0),
-               nix2_update(x, p0))
+  expect_equal(reduce(x, nix2_update, .init = p0),
+               nix2_update(p0, x))
 })
 
 test_that("Updating with zero prior pseudocount gives sample stats", {
   n <- 10
   x <- rnorm(n, mean=3, sd=3)
-  p <- nix2_update(x, nix2_params(0, 0, 0, 0))
+  p <- nix2_update(nix2_params(0, 0, 0, 0), x)
   expect_equal(p$mu, mean(x))
   expect_equal(p$sigma2, var(x)*(n-1)/n)
   expect_equal(p$kappa, n)
