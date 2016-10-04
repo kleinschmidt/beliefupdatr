@@ -1,5 +1,7 @@
-require(assertthat)
-## Functions for normal-inverse-chi-squared distribution and updating
+#' Functions for normal-inverse-chi-squared distribution and updating
+#' @import assertthat
+#' @import purrr
+NULL
 
 #' Conjugate updating of Normal-Chi^-2 parameters
 #'
