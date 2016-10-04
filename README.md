@@ -1,5 +1,9 @@
 # Belief UpdatR
 
+[![Build Status](https://travis-ci.org/kleinschmidt/beliefupdatr.svg?branch=master)](https://travis-ci.org/kleinschmidt/beliefupdatr)
+[![codecov](https://codecov.io/gh/kleinschmidt/beliefupdatr/branch/master/graph/badge.svg)](https://codecov.io/gh/kleinschmidt/beliefupdatr)
+
+
 Belief updating for phonetic adaptation in R.
 
 This is really quite disorganized at this point, use at your own risk.
