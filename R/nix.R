@@ -121,20 +121,3 @@ nix2_classify <- function(x, ps, category=1:length(ps)) {
     t() %>%
     `[`(, category)
 }
-
-## MUCH MUCH SLOWER:
-nix2_classify_2 <- function(x, ps, category=1:length(ps)) {
-  x %>%
-    map(function(onex) map_dbl(ps, d_nix2_predict, x=onex, log=FALSE)) %>%
-    map(~ .x / sum(.x)) %>%
-    do.call(rbind, .)
-}
-
-## a little slower, but numerically more stable for very small lhoods.
-nix2_classify_3 <- function(x, ps, category=1:length(ps)) {
-  map(ps, d_nix2_predict, x=x, log=TRUE) %>%
-    do.call(cbind, .) %>%
-    apply(1, function(x) exp(x - daver::log_sum_exp(x))) %>%
-    t() %>%
-    `[`(, category)
-}
