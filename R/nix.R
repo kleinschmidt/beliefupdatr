@@ -25,12 +25,15 @@ nix2_update <- function(x=NA, p=list(nu=0, kappa=0, mu=0, sigma2=0),
   assert_that(is_nix2_params(p))
   ## assert_that(! is.na(x) && is.na(ss) && is.na(s2))
   assert_that(n>0 || p$nu>0 && p$kappa>0)
+
+  if (is.na(ss)) ss <- 0
+
   within(list(), {
     nu <- p$nu + n
     kappa <- p$kappa + n
     mu <- (p$mu*p$kappa + xbar*n) / (kappa)
     sigma2 <- (p$nu*p$sigma2 + ss + n*p$kappa/(n+p$kappa) * (p$mu-xbar)^2) / nu
-  })  
+  })
 }
 
 #' Wrap parameters into a list for updating etc.
