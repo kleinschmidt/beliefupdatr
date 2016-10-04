@@ -1,4 +1,3 @@
-#' Functions for normal-inverse-chi-squared distribution and updating
 #' @import assertthat
 #' @import purrr
 NULL

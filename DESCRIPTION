@@ -6,6 +6,9 @@ Description: Modeling phonetic adaptation as belief updating requires some
     distributions and utility functions. Here they are.
 Depends:
     R (>= 3.2.3)
+Imports:
+    purrr,
+    assertthat
 License: MIT
 LazyData: true
 RoxygenNote: 5.0.1
