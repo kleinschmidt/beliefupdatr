@@ -1,5 +1,14 @@
 context("Normal-Chi^-2 distributions and updating")
 
+test_that("Invalid NIX2 parameters are rejected", {
+  nix2_params(0,0,0,0)
+  throws_error(nix2_params(Inf, 0, 0, 0))
+  throws_error(nix2_params(0, Inf, 0, 0))
+  throws_error(nix2_params(0, 0, -1, 0))
+  throws_error(nix2_params(0, 0, 0, -1))
+  throws_error(nix2_params(0, 0, Inf, 0))
+  throws_error(nix2_params(0, 0, 0, Inf))
+})
 
 p0 <- nix2_params(mu=0, sigma2=1, kappa=1, nu=1)
 
