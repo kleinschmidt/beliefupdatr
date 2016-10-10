@@ -41,3 +41,37 @@ belief_update <- function(d, cues, categories=NULL, params) {
 }
 
 belief_update(d, 'x', NULL, p0)
+
+# the problem with this approach
+# 1. awkward to restrict which params to update
+# 2. no flexibility in how to handle missing categories.
+#
+# better design seems to be to write a separate reducing function that takes
+# named list of params, cues, and categories, and updates the matching params.
+# (but how to do this efficiently isn't clear. need to zip obs and categories...)
+# 
+
+
+# Helper function to update beliefs for combination of cue and category
+update_cue_category <- function(params, cue_category) {
+  params[[ cue_category[[2]] ]] <- nix2_update_one(params[[ cue_category[[2]] ]],
+                                                   cue_category[[1]])
+  params
+}
+
+belief_update_2 <- function(d, cues, categories, params) {
+  d$params <- purrr::accumulate(purrr::transpose(d[c(cues, categories)]),
+                                update_cue_category,
+                                .init = params) %>%
+    tail(nrow(d))
+  d
+}
+
+cc <- transpose(d[c('x', 'c')])
+  
+pl0 <- list('a'=p0, 'b'=p0)
+d3 <- belief_update_2(d, 'x', 'c', pl0)
+
+# surprisingly, version with transpose isn't much slower (~1ms out of 20ms)
+microbenchmark(belief_update_2(d, 'x', 'c', pl0),
+               belief_update(d, 'x', 'c', p0))
