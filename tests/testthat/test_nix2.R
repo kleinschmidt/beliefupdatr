@@ -16,6 +16,7 @@ p0 <- nix2_params(mu=0, sigma2=1, kappa=1, nu=1)
 test_that("Updating works for single data point", {
   p <- nix2_update(p0, 0)
   expect_false(any(is.na(p)))
+  expect_equal(p, nix2_update_one(p0, 0))
 })
 
 test_that("Incremental and batch updating equivalent", {

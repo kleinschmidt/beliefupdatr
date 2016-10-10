@@ -22,7 +22,7 @@ are passed)}
 \item{s2}{observed sample variance (ss / (n-1); overrides x)}
 }
 \value{
-Updated parameter vector.
+Updated parameters
 }
 \description{
 This uses the parametrization from

@@ -17,7 +17,7 @@ NULL
 #' @param ss observed sum of squares (overrides x and s2)
 #' @param s2 observed sample variance (ss / (n-1); overrides x)
 #'
-#' @return Updated parameter vector.
+#' @return Updated parameters
 #' @export
 nix2_update <- function(p=list(nu=0, kappa=0, mu=0, sigma2=0),
                         x=NA,
@@ -34,10 +34,37 @@ nix2_update <- function(p=list(nu=0, kappa=0, mu=0, sigma2=0),
   within(list(), {
     nu <- p$nu + n
     kappa <- p$kappa + n
-    mu <- (p$mu*p$kappa + xbar*n) / (kappa)
-    sigma2 <- (p$nu*p$sigma2 + ss + n*p$kappa/(n+p$kappa) * (p$mu-xbar)^2) / nu
+    mu <- (p$mu*p$kappa + xbar*n) / kappa
+    sigma2 <- (p$nu*p$sigma2 + ss + n*p$kappa/kappa * (p$mu-xbar)^2) / nu
   })
 }
+
+
+#' Conjugate updating of Normal-Chi^-2 parameters for a single observation
+#'
+#' This uses the parametrization from
+#' \href{https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf}{Murphy (2008;
+#' University of British Columbia)}.
+#'
+#' This is specialized for a single observation, and about 25% faster than
+#' \code{nix2_update}. Use, for instance, in \code{reduce} or \code{accumulate}.
+#'
+#' @param p named list of distribution parameters (mu, sigma2, nu, and kappa)
+#' @param x vector of observations to update with (optional if summary stats
+#' are passed)
+#'
+#' @return Update parameters
+#' @export
+nix2_update_one <- function(p=list(nu=0, kappa=0, mu=0, sigma2=0), x) {
+  assert_that(is_nix2_params(p))
+  within(list(), {
+    nu <- p$nu + 1
+    kappa <- p$kappa + 1
+    mu <- (p$mu * p$kappa + x) / kappa
+    sigma2 <- (p$nu * p$sigma2 + p$kappa/kappa * (p$mu - x)^2) / nu
+  })
+}
+                            
 
 #' Wrap parameters into a list for updating etc.
 #'
