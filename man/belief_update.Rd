@@ -23,6 +23,14 @@ The input data frame with parameter values updated after each
 \description{
 Update beliefs from observations stored in a data frame
 }
+\examples{
+d <- data.frame(x = rnorm(100, 3),
+                c = sample(c('a', 'b'), 100, replace=TRUE))
+belief_update(d, 'x', 'c',
+              list(a = nix2_params(0, 0, 10, 10),
+                   b = nix2_params(0, 0, 10, 10)))
+
+}
 \seealso{
 \code{\link{belief_update_batch}} for batch belief updating, which
   is more efficient.

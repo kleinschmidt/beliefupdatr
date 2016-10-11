@@ -16,6 +16,15 @@ NULL
 #'
 #' @seealso \code{\link{belief_update_batch}} for batch belief updating, which
 #'   is more efficient.
+#' 
+#' @examples
+#' d <- data.frame(x = rnorm(100, 3),
+#'                 c = sample(c('a', 'b'), 100, replace=TRUE))
+#' belief_update(d, 'x', 'c',
+#'               list(a = nix2_params(0, 0, 10, 10),
+#'                    b = nix2_params(0, 0, 10, 10)))
+#'
+#' @export
 belief_update <- function(d, cue, categories, beliefs) {
   d$params <- purrr::accumulate(purrr::transpose(d[c(cue, categories)]),
                                 update_cue_category,
@@ -42,9 +51,17 @@ update_cue_category <- function(params, cue_category) {
 #'   values of \code{d[[trials]]} from \code{at}. \code{d$params} is a list
 #'   column where each element is a named list of category belief parameters
 #'
-#' @seealso \code{link{belief_update}} for fully incremental,
+#' @seealso \code{\link{belief_update}} for fully incremental,
 #'   observation-by-observation belief updating.
 #'
+#' @examples
+#' d <- data.frame(x = rnorm(100, 3),
+#'                 c = sample(c('a', 'b'), 100, replace=TRUE),
+#'                 trial = 1:100)
+#' belief_update_batch(d, 'x', 'c', 'trial', seq(10, 100, by=10),
+#'                     list(a = nix2_params(0, 0, 10, 10),
+#'                          b = nix2_params(0, 0, 10, 10)))
+#' 
 #' @export
 belief_update_batch <- function(d, cue, categories, trials, at, beliefs) {
   assert_that(d %has_name% cue, d %has_name% categories, d %has_name% trials)

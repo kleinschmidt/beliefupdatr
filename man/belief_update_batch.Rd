@@ -28,8 +28,17 @@ A data_frame with updated NIX2 parameters in \code{params} for the
 \description{
 Update beliefs in a data frame in batches
 }
+\examples{
+d <- data.frame(x = rnorm(100, 3),
+                c = sample(c('a', 'b'), 100, replace=TRUE),
+                trial = 1:100)
+belief_update_batch(d, 'x', 'c', 'trial', seq(10, 100, by=10),
+                    list(a = nix2_params(0, 0, 10, 10),
+                         b = nix2_params(0, 0, 10, 10)))
+
+}
 \seealso{
-\code{link{belief_update}} for fully incremental,
+\code{\link{belief_update}} for fully incremental,
   observation-by-observation belief updating.
 }
 
