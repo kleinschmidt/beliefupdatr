@@ -12,7 +12,7 @@ NULL
 #'   match unique values of \code{d[[categories]]}
 #'
 #' @return The input data frame with parameter values updated after each
-#'   observation in the \code{params} columns
+#'   observation in the \code{beliefs} columns
 #'
 #' @seealso \code{\link{belief_update_batch}} for batch belief updating, which
 #'   is more efficient.
@@ -26,9 +26,9 @@ NULL
 #'
 #' @export
 belief_update <- function(d, cue, categories, beliefs) {
-  d$params <- purrr::accumulate(purrr::transpose(d[c(cue, categories)]),
-                                update_cue_category,
-                                .init = beliefs) %>%
+  d$beliefs <- purrr::accumulate(purrr::transpose(d[c(cue, categories)]),
+                                 update_cue_category,
+                                 .init = beliefs) %>%
     tail(nrow(d))
   d
 }
@@ -47,8 +47,8 @@ update_cue_category <- function(params, cue_category) {
 #' @param trials Quoted name of column with trial numbers to define batches
 #' @param at Trial numbers to get updated beliefs
 #'
-#' @return A data_frame with updated NIX2 parameters in \code{params} for the
-#'   values of \code{d[[trials]]} from \code{at}. \code{d$params} is a list
+#' @return A data_frame with updated NIX2 parameters in \code{beliefs} for the
+#'   values of \code{d[[trials]]} from \code{at}. \code{d$beliefs} is a list
 #'   column where each element is a named list of category belief parameters
 #'
 #' @seealso \code{\link{belief_update}} for fully incremental,
@@ -68,11 +68,9 @@ belief_update_batch <- function(d, cue, categories, trials, at, beliefs) {
   assert_that(max(d[[trials]]) >= max(at))
   assert_that(is_empty(setdiff(d[[categories]], names(beliefs))))
 
-  # splice in name of trials column in cut() expression
-  grouping <- lazyeval::interp(~ cut(trs,
-                                     breaks=c(-Inf, at),
-                                     labels=at),
-                               trs=as.name(trials)) %>%
+  # splice in name of trials column in cut_at() expression
+  grouping <-
+    lazyeval::interp(~ cut_at(trs, at), trs=as.name(trials)) %>%
     list() %>%
     set_names(trials)
 
@@ -100,3 +98,8 @@ update_summary_stats <- function(params, sumstats) {
        ~ do.call(nix2_update, c(list(p=.x), .y)))
 }
 
+# label intervals with elements from 'at'
+cut_at <- function(x, at) {
+  codes <- .bincode(x, breaks=c(-Inf, at))
+  at[codes]
+}

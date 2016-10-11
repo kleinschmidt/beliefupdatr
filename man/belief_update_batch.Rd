@@ -21,8 +21,8 @@ belief_update_batch(d, cue, categories, trials, at, beliefs)
 match unique values of \code{d[[categories]]}}
 }
 \value{
-A data_frame with updated NIX2 parameters in \code{params} for the
-  values of \code{d[[trials]]} from \code{at}. \code{d$params} is a list
+A data_frame with updated NIX2 parameters in \code{beliefs} for the
+  values of \code{d[[trials]]} from \code{at}. \code{d$beliefs} is a list
   column where each element is a named list of category belief parameters
 }
 \description{

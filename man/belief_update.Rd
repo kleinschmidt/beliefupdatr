@@ -18,7 +18,7 @@ match unique values of \code{d[[categories]]}}
 }
 \value{
 The input data frame with parameter values updated after each
-  observation in the \code{params} columns
+  observation in the \code{beliefs} columns
 }
 \description{
 Update beliefs from observations stored in a data frame
