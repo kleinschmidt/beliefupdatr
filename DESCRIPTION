@@ -11,7 +11,10 @@ Imports:
     assertthat,
     devtools,
     daver,
-    rstan
+    rstan,
+    lazyeval,
+    dplyr,
+    tidyr
 Remotes:
     kleinschmidt/daver
 License: MIT
