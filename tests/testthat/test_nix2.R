@@ -1,6 +1,8 @@
 library(purrr)
 context("Normal-Chi^-2 distributions and updating")
 
+set.seed(1)
+
 test_that("Invalid NIX2 parameters are rejected", {
   nix2_params(0,0,0,0)
   throws_error(nix2_params(Inf, 0, 0, 0))
@@ -41,3 +43,39 @@ test_that("Posterior predictive is nearly normal for high confidence", {
   expect_equal(dnorm(x), d_nix2_predict(x, p))
 })
 
+test_that("Samples from NIX2 are means and variances", {
+  p <- nix2_params(0, 1, 1, 1)
+  mv <- r_nix2(100, p)
+  expect_equal(dim(mv), c(100, 2))
+  expect_equal(colnames(mv), c("mean", "variance"))
+})
+
+test_that("Samples from NIX2 have correct moments", {
+  p <- nix2_params(1, 3, 10, 20)
+  mv <- r_nix2(1e6, p)
+
+  theor_means <- function(p) with(p, c(mean=mu, variance=nu/(nu-2)*sigma2))
+  theor_vars <- function(p) with(p, c(mean = sigma2/kappa * nu/(nu-2),
+                                      variance = 2*(nu*sigma2)^2 / ((nu-2)^2 * (nu-4))))
+
+  theoretical_moments <- function(p) rbind(theor_means(p), theor_vars(p))
+  moments <- function(mv) apply(mv, 2, function(x) c(mean(x), var(x)))
+
+  ## I just guessed at the tolerance here...
+  expect_equal(moments(mv), theoretical_moments(p), tolerance=1e-3)
+})
+
+test_that("Posterior predictive density agrees with samples", {
+  p <- nix2_params(1, 3, 10, 20)
+  x <- seq(-10, 10)
+  post_pred <- d_nix2_predict(x, p, log=TRUE)
+
+  mv <- r_nix2(1e6, p)
+  sampled <- map_dbl(x, ~ daver::log_mean_exp(dnorm(.x,
+                                                    mv[ ,1],
+                                                    sqrt(mv[ ,2]),
+                                                    log=TRUE)))
+
+  ## again, just totally winging it here with the tolerance
+  expect_equal(post_pred, sampled, tolerance=1e-3)
+})

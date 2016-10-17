@@ -205,7 +205,7 @@ r_nix2 <- function(n, p) {
   assert_that(is_nix2_params(p))
 
   vars <- p$nu * p$sigma2 / rchisq(n, df = p$nu)
-  means <- rnorm(n, mean = p$mu, sd = sqrt(vars))
+  means <- rnorm(n, mean = p$mu, sd = sqrt(vars/p$kappa))
 
   cbind(mean=means, variance=vars)
 }
