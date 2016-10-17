@@ -149,3 +149,63 @@ nix2_classify <- function(x, ps, category=1:length(ps)) {
     t() %>%
     `[`(, category)
 }
+
+#' Marginal likelihood function
+#'
+#' Compute the marginal likelihood of data given NIX^2 prior, or \eqn{p(x) =
+#' \int \mathrm d \sigma_2 \mathrm d\mu p(x | \mu, \sigma^2) p(\mu, \sigma^2)}.
+#'
+#' Based on equation 171 from
+#' \href{https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf}{Murphy (2008;
+#' University of British Columbia)}.
+#'
+#' @inheritParams nix2_update
+#' @param log Default FALSE.
+#'
+#' @return The overal marginal likelihood of all the observations x (or summary
+#'   statistics if provided).
+#' @export
+nix2_marginal_lhood <- function(p,
+                                x=NA,
+                                n=length(x), 
+                                xbar=mean(x),
+                                ss=s2*(n-1),
+                                s2=var(x),
+                                log = FALSE) {
+  pn <- nix2_update(p, n=n, xbar=xbar, ss=ss)
+  L <- nix2_log_norm_const(pn) - nix2_log_norm_const(p0) - (n/2)*logpi
+  ifelse(log, L, exp(L))
+}
+
+logpi <- log(pi)
+
+#' Normalizing constant for NIX^2 distribution
+#'
+#' The terms of \eqn{p(\mu, \sigma^2 | \mu_0, \sigma^2_0, \nu, \kappa)} that
+#' don't involve \eqn{\mu} or \eqn{\sigma^2}.  Useful in calculating the
+#' marginal likelihood of data, where the mean and variance are integrated out.
+#'
+#' @param p NIX^2 parameters
+nix2_log_norm_const <- function(p) {
+  with(p, lgamma(nu/2) - 0.5 * (log(kappa) + nu * (log(nu) + log(sigma2))))
+}
+
+#' Sample from NIX2 distribution
+#'
+#' This first draws the variance from a (scaled) inverse chi squared
+#' distribution, and then the mean from a normal distribution.
+#'
+#' @param n Number of samples to draw
+#' @param p NIX2 parameters
+#'
+#' @return An n x 2 matrix with sampled means in the first column and variances
+#'   in the second
+#' @export
+r_nix2 <- function(n, p) {
+  assert_that(is_nix2_params(p))
+
+  vars <- p$nu * p$sigma2 / rchisq(n, df = p$nu)
+  means <- rnorm(n, mean = p$mu, sd = sqrt(vars))
+
+  cbind(mean=means, variance=vars)
+}
