@@ -80,6 +80,13 @@ test_that("Predictive density agrees with samples", {
   expect_equal(post_pred, sampled, tolerance=1e-3)
 })
 
+test_that("Marginal likelihood integrates to 1", {
+  p <- nix2_params(1, 3, 10, 20)
+  x <- seq(-20, 20)
+  marg_lh <- map_dbl(x, ~ nix2_marginal_lhood(p, .))
+  expect_equal(sum(marg_lh), 1)
+})
+
 test_that("Marginal likelihood agrees with samples", {
   ## marginal likelihood p(D) = \int p(D, P) dP = \int p(D | P) p(P) dP
   ##
