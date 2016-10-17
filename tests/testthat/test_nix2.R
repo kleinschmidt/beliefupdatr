@@ -65,7 +65,7 @@ test_that("Samples from NIX2 have correct moments", {
   expect_equal(moments(mv), theoretical_moments(p), tolerance=1e-3)
 })
 
-test_that("Posterior predictive density agrees with samples", {
+test_that("Predictive density agrees with samples", {
   p <- nix2_params(1, 3, 10, 20)
   x <- seq(-10, 10)
   post_pred <- d_nix2_predict(x, p, log=TRUE)
@@ -78,4 +78,21 @@ test_that("Posterior predictive density agrees with samples", {
 
   ## again, just totally winging it here with the tolerance
   expect_equal(post_pred, sampled, tolerance=1e-3)
+})
+
+test_that("Marginal likelihood agrees with samples", {
+  ## marginal likelihood p(D) = \int p(D, P) dP = \int p(D | P) p(P) dP
+  ##
+  ## we can approximate this integral with samples from the prior on P.
+
+  p <- nix2_params(1, 3, 10, 20)
+  x <- seq(-10, 10)
+
+  marg_lh <- map_dbl(x, ~ nix2_marginal_lhood(p, ., log=TRUE))
+
+  mv <- r_nix2(1e6, p)
+  samp_lh <- map_dbl(x, ~ dnorm(., mv[, 1], sqrt(mv[, 2]), log=TRUE) %>%
+                          daver::log_mean_exp())
+
+  expect_equal(samp_lh, marg_lh, tol=1e-3)
 })

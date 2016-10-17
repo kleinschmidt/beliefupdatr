@@ -173,7 +173,7 @@ nix2_marginal_lhood <- function(p,
                                 s2=var(x),
                                 log = FALSE) {
   pn <- nix2_update(p, n=n, xbar=xbar, ss=ss)
-  L <- nix2_log_norm_const(pn) - nix2_log_norm_const(p0) - (n/2)*logpi
+  L <- nix2_log_norm_const(pn) - nix2_log_norm_const(p) - (n/2)*logpi
   ifelse(log, L, exp(L))
 }
 
