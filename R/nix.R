@@ -209,3 +209,57 @@ r_nix2 <- function(n, p) {
 
   cbind(mean=means, variance=vars)
 }
+
+#' Scaled inverse chi-squared density
+#'
+#' We compute this based on the chi-squared density function.  Our random
+#' variable y is obtained from a chi-squared(nu) variable x via
+#'
+#'   y = g(x) = nu * sigma^2 * 1/x
+#'   x = g^-1(y) = nu*sigma^2 * 1/y
+#'
+#' Thus, the density function f_Y(y) is obtained from f_X = dchisq via
+#'
+#'   f_Y(y) = d/dy g^-1(y) * f_X(g^-1(y))
+#'          = y^-2 * nu*sigma^2 * dchisq(nu*sigma^2/y, nu)
+#'
+#' @param y Point to calculate density for
+#' @param sigma2 Scale parameter
+#' @param nu Degrees of freedom
+#' @param log Default: FALSE
+#'
+#' @return The density of y under the scaled-inverse-chi-squared distribution
+#' @export
+d_scaled_inv_chisq <- function(y, sigma2, nu, log=FALSE) {
+  log_d <- -2*log(y) + log(nu) + log(sigma2) + dchisq(nu*sigma2/y, df=nu, log=TRUE)
+  if (log) log_d
+  else exp(log_d)
+}
+
+#' Probability density function for NIX2 distribution
+#'
+#' @param mv Matrix of mean-variance pairs, means in the first column and
+#'   variances in the second.
+#' @param p NIX2 parameters.
+#' @param log FALSE to return probability (default), TRUE for log-probability.
+#'
+#' @return The (log-)probability density for each row of \code{mv}.
+#' @export
+d_nix2 <- function(mv, p, log=FALSE) {
+  assert_that(is_nix2_params(p))
+  if (is.null(dim(mv))) {
+    assert_that(length(mv) == 2)
+    mv <- matrix(mv, ncol=2)
+  } else {
+    assert_that(dim(mv)[2] == 2)
+  }
+
+  log_d <-
+    with(p,
+         dnorm(mv[, 1], mean=mu, sd=sqrt(mv[, 2] / kappa), log=TRUE) +
+           d_scaled_inv_chisq(mv[, 2], sigma2=sigma2, nu=nu, log=TRUE))
+
+  if (log) log_d
+  else exp(log_d)
+         
+}
