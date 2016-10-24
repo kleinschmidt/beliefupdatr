@@ -72,8 +72,8 @@ params_update <- function(params, x) {
 }
 
 # create a new particle with x assigned to z and update weight
-assign_data <- function(part, x, new_z) {
-  within(part, {
+assign_data <- function(particle, x, new_z) {
+  within(particle, {
     z <- c(z, new_z)
     last_ll <- params[[new_z]]$marg_log_lhood
     params[[new_z]] <- params_update(params[[new_z]], x)
