@@ -1,0 +1,97 @@
+---
+title: "Unsupervised belief updating with particle filters"
+author: "Dave Kleinschmidt"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Why incremental unsupervised belief updating is hard
+
+Belief updating is _supervised_ when every observation's intended category is
+known.  This is a reasonable assumption in many cases (where critical stimuli
+are paired with visual, lexical, or other information that unambiguously
+identifies the intended category).  But in many other cases this assumption does
+not make sense.  For instance, in a typical _distributional learning_ experiment
+[like @Clayards2008], every word is a minimal pair (like "beach" vs. "peach").
+In these cases, belief updating is _unsupervised_ (or semi-supervised).
+
+Supervised belief updating is computationally simple: on every trial, only a
+single category's beliefs need to be updated.  This naturally lends itself to
+incremental updating, where the updated beliefs from trial $n$ serve as the
+prior beliefs for trial $n+1$:
+\[ 
+p(\theta | x_{1\ldots n+1}, c_{1\ldots n+1}) 
+  \propto 
+  p(x_n | \theta, c_n)
+  p(\theta | x_{1\ldots n}, c_{1\ldots n}) 
+\]
+Mathematically, unsupervised belief updating is a straightforward extension of
+supervised belief updating.  Instead of conditioning on the category $c$, we
+treat the category as unknown, and the updated beliefs are the result of
+averaging the results of belief updating after (hypothetically) assigning the
+observation to that category:
+\[
+p(\theta | x) 
+  = \sum_i p(\theta, c=i | x)
+  \propto \sum_i p(\theta | x, c=i) p(c=i)
+\]
+However, this makes incremental updating computationally very demanding.  If on
+every trial there are two possible categories, then after $n$ trials there are
+$2^n$ possible ways to categorize those trials.  To be exactly correct, we need
+to average over _all_ of these hypothetical assignments, but this number quickly
+becomes impossibly large: in a 200-trial experiment, there are somewhere around
+$10^60$ ways to categorize all the stimuli encountered.
+
+# Approximation strategies
+
+While doing exact inference in these situations is often practically impossible,
+there are a number of ways to approximate the exact inference.
+
+
+
+
+
+```{r, }
+
+p0 <- list(a = nix2_params(-2, 1, 10, 10),
+           b = nix2_params(2, 1, 10, 10))
+
+n_part <- 100
+particles <- map(1:n_part, ~ init_particle(p0))
+
+xs <- rnorm(100) + rep(c(-4, 4), length.out=100)
+
+
+ps10 <- reduce(xs[1:10], filter_chen_liu, .init=particles)
+
+ps20 <- reduce(xs[11:20], filter_chen_liu, .init=ps10)
+
+ps30 <- reduce(xs[21:30], filter_chen_liu, .init=ps20)
+
+
+ps30 %>%
+  sort_by(~ paste(.$z)) %>%
+  map(~ c(as.list(.$z), .$w)) %>%
+  transpose() %>%
+  map(as_vector) %>%
+  as_data_frame()
+
+zs %>%
+  as_data_frame() %>%
+  set_names(1:ncol(.)) %>%
+  mutate(particle=1:length(`1`),
+         weight = map_dbl(ps30, 'w')) %>%
+  gather(trial, cat, -particle, -weight) %>%
+  mutate(trial = as.numeric(trial)) %>%
+  ggplot(aes(x=particle, y=trial, fill=cat, alpha=weight)) +
+  geom_tile()
+
+(ws <- map_dbl(ps30, 'w'))
+
+```
+
+.
