@@ -100,3 +100,70 @@ filter_chen_liu <- function(particles, x) {
     normalize_weights()
 }
 
+################################################################################
+# Doing something useful with particles:
+
+#' Convert prior + sufficient stats to NIX2 params
+particle_params_to_nix2 <- function(params) {
+  assert_that(has_name(params, 'prior'), has_name(params, 'sumstats'))
+  lift(nix2_update)(p=params$prior, params$sumstats)
+}
+
+#' Posterior predictive function for a single particle
+#'
+#' @param x Points to calculate posterior predictive density at
+#' @param particle The particle
+#' @param log =FALSE
+#'
+#' @return A named list of predictive densities for each category in particle
+d_predict_particle <- function(x, particle, log=FALSE) {
+  assert_that(has_name(particle, 'params'))
+  map(particle$params,
+      . %>%
+        particle_params_to_nix2() %>%
+        d_nix2_predict(p=., x=x, log=log))
+}
+
+d_part_pred_df <- function(x, particle, log=FALSE) {
+  
+}
+
+d_predict_particles <- function(x, particles, log=FALSE) {
+  
+}
+
+
+
+d_predict_particles <- function(x, particles, log=FALSE) {
+  ws <- map_dbl(particles, 'w')
+
+  particles %>%
+    map(c('params', category)) %>%
+    at_depth(2, . %>% particle_params_to_nix2 %>% d_nix2_predict(x=-8:8)) %>%
+    transpose() %>%
+    map(~ lift(cbind)(.x) %*% ws)
+
+  %>%
+    map(
+
+    }
+
+
+  xs <- seq(-6, 6, length.out=100)
+  
+  ps30 %>%
+    transpose() %>%
+    as_data_frame() %>%
+    mutate(w = as_vector(w)) %>%
+    mutate(particle_id = row_number(),
+           predict = at_depth(params, 2, . %>%
+                                           particle_params_to_nix2() %>%
+                                           d_nix2_predict(x=xs))) %>%
+    unnest(map(predict, . %>% as_data_frame()%>% mutate(x=xs)))
+
+                %>% gather('category', 'lhood', -x)))
+
+  %>%
+    ggplot(aes(x=x, y=lhood, group=paste(particle_id, category),
+               color=category, alpha=w)) +
+    geom_line()
