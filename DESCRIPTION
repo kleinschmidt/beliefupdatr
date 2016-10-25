@@ -16,11 +16,13 @@ Imports:
     dplyr,
     tidyr
 Remotes:
-    kleinschmidt/daver
+    kleinschmidt/daver,
+    kleinschmidt/phonetic-sup-unsup
 License: MIT
 LazyData: true
 RoxygenNote: 5.0.1
 Suggests: testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    supunsup
 VignetteBuilder: knitr
