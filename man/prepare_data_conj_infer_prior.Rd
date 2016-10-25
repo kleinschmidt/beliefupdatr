@@ -4,7 +4,7 @@
 \alias{prepare_data_conj_infer_prior}
 \title{Convert data to stan input for conjugate prior inference}
 \usage{
-prepare_data_conj_infer_prior(training, test, cue, category, response, subject)
+prepare_data_conj_infer_prior(training, test, cue, category, response, group)
 }
 \arguments{
 \item{training}{Data frame with training data: 'cue', 'category', and
@@ -20,7 +20,7 @@ category labels.}
 
 \item{response}{(Quoted) name of column in test data with responses}
 
-\item{subject}{(Quoted) name of column with subject identifiers}
+\item{group}{(Quoted) name of column with group identifiers}
 }
 \value{
 a list with elements: x, y, z (training cues, subjects, and

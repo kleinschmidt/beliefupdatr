@@ -1,13 +1,15 @@
 ---
-title: "Conjugate belief updating with Stan"
+title: "Inferring listeners prior beliefs with Stan"
 author: "Dave Kleinschmidt"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Conjugate belief updating}
+  %\VignetteIndexEntry{Inferring prior beliefs}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+This package includes a Stan model for inferring listeners prior beliefs, based on adaptation behavior.
 
 ```{r preamble}
 
@@ -18,12 +20,6 @@ library(beliefupdatr)
 library(supunsup)
 
 library(rstan)
-
-```
-
-```{r options, results='hide', message=FALSE, echo=FALSE}
-
-knitr::opts_chunk$set(cache=TRUE)
 
 ```
 
@@ -112,7 +108,7 @@ mod <- beliefupdatr::compile_stan('conj_id_lapsing_fit.stan')
 
 A few tips for speeding things up: if you have multiple cores and enough memory, you can run the chains in parallel by setting
 
-```{r cores}
+```{r cores, eval=FALSE}
 options(mc.cores = 4)
 ```
 

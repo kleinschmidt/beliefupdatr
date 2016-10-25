@@ -12,7 +12,7 @@
 #' @param category (Quoted) name of column in training data with the correct
 #'   category labels.
 #' @param response (Quoted) name of column in test data with responses
-#' @param subject (Quoted) name of column with subject identifiers
+#' @param group (Quoted) name of column with group identifiers
 #'
 #' @return a list with elements: x, y, z (training cues, subjects, and
 #'   categories), n, m, l (number of observations, subject, and categories),
