@@ -27,24 +27,26 @@ transformed data {
   real xbar[m,l];               // mean
   real ss[m,l];                 // sum of squares
   real n_cat[m,l];              // number of obs per category
+  real n_each;
 
-  xbar <- rep_array(0, m,l);
-  ss <- rep_array(0, m,l);
-  n_cat <- rep_array(0, m,l);
+  xbar = rep_array(0, m,l);
+  ss = rep_array(0, m,l);
+  n_cat = rep_array(0, m,l);
 
   // running mean/sum-of-squares calculations
   for (j in 1:n) {
     real delta;
     int cat;
     int subj;
-    cat <- z[j];
-    subj <- y[j];
-    n_cat[cat,subj] <- n_cat[cat,subj] + 1;
-    delta <- x[j] - xbar[cat,subj];
-    xbar[cat,subj] <- xbar[cat,subj] + delta / n_cat[cat,subj];
-    ss[cat,subj] <- ss[cat,subj] + delta * (x[j] - xbar[cat,subj]);
+    cat = z[j];
+    subj = y[j];
+    n_cat[cat,subj] = n_cat[cat,subj] + 1;
+    delta = x[j] - xbar[cat,subj];
+    xbar[cat,subj] = xbar[cat,subj] + delta / n_cat[cat,subj];
+    ss[cat,subj] = ss[cat,subj] + delta * (x[j] - xbar[cat,subj]);
   }
 
+  n_each = n / (m*l);           /* avg. number of observations per category */
 }
 
 parameters {
@@ -70,41 +72,39 @@ transformed parameters {
   // Murphy (2007)
   for (cat in 1:m) {
     for (subj in 1:l) {
-      kappa_n[cat,subj] <- kappa_0 + n_cat[cat,subj];
-      nu_n[cat,subj] <- nu_0 + n_cat[cat,subj];
-      mu_n[cat,subj] <- (mu_0[cat] * kappa_0 + xbar[cat,subj] * n_cat[cat,subj]) / kappa_n[cat,subj];
-      sigma_n[cat,subj] <- sqrt((nu_0*sigma_0[cat]^2 +
+      kappa_n[cat,subj] = kappa_0 + n_cat[cat,subj];
+      nu_n[cat,subj] = nu_0 + n_cat[cat,subj];
+      mu_n[cat,subj] = (mu_0[cat] * kappa_0 + xbar[cat,subj] * n_cat[cat,subj]) / kappa_n[cat,subj];
+      sigma_n[cat,subj] = sqrt((nu_0*sigma_0[cat]^2 +
                                  ss[cat,subj] +
                                  (n_cat[cat,subj]*kappa_0)/(kappa_n[cat,subj]) *
                                    (mu_0[cat] - xbar[cat,subj])^2
                                  ) /
                                 nu_n[cat,subj]);
-      t_scale[cat,subj] <- sigma_n[cat,subj] * sqrt((kappa_n[cat,subj] + 1) / kappa_n[cat,subj]);
+      t_scale[cat,subj] = sigma_n[cat,subj] * sqrt((kappa_n[cat,subj] + 1) / kappa_n[cat,subj]);
     }
   }
 
   // compute category probabilities for each of the test stimuli
   for (j in 1:n_test) {
     int subj;
-    subj <- y_test[j];
+    subj = y_test[j];
     // calculate un-normalized log prob for each category
     for (cat in 1:m) {
-      log_p_test_conj[j,cat] <- student_t_log(x_test[j],
+      log_p_test_conj[j,cat] = student_t_lpdf(x_test[j] |
                                               nu_n[cat,subj],
                                               mu_n[cat,subj],
                                               t_scale[cat,subj]);
     }
     // normalize and store actual probs in simplex
-    p_test_conj[j] <- exp(log_p_test_conj[j] - log_sum_exp(log_p_test_conj[j]));
+    p_test_conj[j] = exp(log_p_test_conj[j] - log_sum_exp(log_p_test_conj[j]));
   }
 }
 
 model {
-  real n_each;
   vector[m] lapsing_probs;
   
-  n_each <- n / (m*l);
-  lapsing_probs <- rep_vector(lapse_rate / m, m);
+  lapsing_probs = rep_vector(lapse_rate / m, m);
   
   // need to calculate category probabilities for each test trial
   kappa_0 ~ normal(0, n_each*4);
@@ -124,9 +124,9 @@ generated quantities {
   // simplex[m] p_test_sampled[n_test];
   // real ll;
 
-  // ll <- 0;
+  // ll = 0;
   // for (i in 1:n_test) {
-  //   ll <- ll + multinomial_log(z_test_counts[i], p_test_conj[i]);
+  //   ll = ll + multinomial_log(z_test_counts[i], p_test_conj[i]);
   // }
   
 }
