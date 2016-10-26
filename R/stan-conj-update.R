@@ -70,3 +70,37 @@ prepare_data_conj_infer_prior <- function(training, test,
     n_test <- length(x_test)
   })
 }
+
+
+## rename dimensions to make melting easier
+rename_dims <- function(x, var, new_names) {
+  names(dimnames(x[[var]])) <- new_names
+  return(x)
+}
+
+# helper function to melt a mult-dimensional array of samples into a df
+melt_samples <- function(samples, varname) {
+  reshape2::melt(samples[[varname]], value.name=varname) %>%
+    tbl_df
+}
+
+
+cond_from_idx <- function(i, lev) factor(lev[i], levels = lev)
+
+#' Extract prior samples as a data frame
+#' 
+#' @export
+extract_prior_samples <- function(samples, cat_levels) {
+
+  varnames <- c('mu_0', 'sigma_0', 'kappa_0', 'nu_0')
+
+  s <- samples %>%
+    rename_dims('mu_0', c('iterations', 'cat_num')) %>%
+    rename_dims('sigma_0', c('iterations', 'cat_num'))
+
+  map(varnames, melt_samples, samples=s) %>%
+    reduce(inner_join) %>%
+    mutate(category = cond_from_idx(cat_num, cat_levels))
+
+}
+
