@@ -104,3 +104,37 @@ extract_prior_samples <- function(samples, cat_levels) {
 
 }
 
+
+#' Extract updated parameter samples as a data frame
+#' 
+#' @export
+extract_updated_samples <- function(samples, cat_levels, group_levels) {
+
+  varnames <- c('mu_n', 'sigma_n', 'kappa_n', 'nu_n')
+
+  s <- samples %>%
+    rename_dims('mu_n', c('iterations', 'cat_num', 'group_num')) %>%
+    rename_dims('sigma_n', c('iterations', 'cat_num', 'group_num')) %>%
+    rename_dims('kappa_n', c('iterations', 'cat_num', 'group_num')) %>%
+    rename_dims('nu_n', c('iterations', 'cat_num', 'group_num'))
+
+  map(varnames, melt_samples, samples=s) %>%
+    reduce(inner_join) %>%
+    mutate(category = cond_from_idx(cat_num, cat_levels),
+           group = cond_from_idx(group_num, group_levels))
+
+}
+
+#'
+#'
+#' @export
+updated_samples_predict_lhood <- function(updated_samples, x) {
+  
+  y <- updated_samples %>%
+    by_row(~ nix2_params(.$mu_n, .$sigma_n^2, .$kappa_n, .$nu_n) %>%
+             d_nix2_predict(x=x, p=.) %>%
+             data_frame(x=x, pred=.)) %>%
+    select(iterations, category, group, .out) %>%
+    unnest(.out)
+
+}
