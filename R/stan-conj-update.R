@@ -1,4 +1,5 @@
 #' @import dplyr purrr tidyr
+#' @importFrom reshape2 melt
 NULL
 
 # Support functions for conjugate belief updating
@@ -75,7 +76,7 @@ prepare_data_conj_infer_prior <- function(training, test,
 }
 
 
-## rename dimensions to make melting easier
+# rename dimensions to make melting easier
 rename_dims <- function(x, var, new_names) {
   names(dimnames(x[[var]])) <- new_names
   return(x)
@@ -90,10 +91,20 @@ melt_samples <- function(samples, varname) {
 
 cond_from_idx <- function(i, lev) factor(lev[i], levels = lev)
 
-#' Extract prior samples as a data frame
+#' Extract sampled prior beliefs from fitted model to a data_frame
+#'
+#' @param fitted Fitted stan model for inferring prior
+#' @param cat_levels Labels for the categories.
+#' @param samples Optional: Samples extracted from fitted model with
+#'   \code{rstan::extract}, will override fitted if provided.
+#'
+#' @return a data_frame, with one row per sample and columns for
+#'   \code{iterations} (sample number), \code{category}, \code{mu_0},
+#'   \code{sigma_0}, \code{kappa_0}, and \code{nu_0}.
 #' 
 #' @export
-extract_prior_samples <- function(samples, cat_levels) {
+extract_prior_samples <- function(fitted, cat_levels,
+                                  samples=rstan::extract(fitted)) {
 
   varnames <- c('mu_0', 'sigma_0', 'kappa_0', 'nu_0')
 
@@ -103,15 +114,23 @@ extract_prior_samples <- function(samples, cat_levels) {
 
   map(varnames, melt_samples, samples=s) %>%
     reduce(inner_join) %>%
-    mutate(category = cond_from_idx(cat_num, cat_levels))
+    mutate(category = cond_from_idx(cat_num, cat_levels)) %>%
+    select(-cat_num)
 
 }
 
-
-#' Extract updated parameter samples as a data frame
+#' Extract sampled updated beliefs from fitted model to data_frame
+#'
+#' @inheritParams extract_prior_samples
+#' @param group_levels Labels for groups/conditions (for updated)
+#'
+#' @return a data_frame, with one row per sample and columns for
+#'   \code{iterations} (sample number), \code{category}, \code{group},
+#'   \code{mu_n}, \code{sigma_n}, \code{kappa_n}, and \code{nu_n}.
 #' 
 #' @export
-extract_updated_samples <- function(samples, cat_levels, group_levels) {
+extract_updated_samples <- function(fitted, cat_levels, group_levels,
+                                    samples=rstan::extract(fitted)) {
 
   varnames <- c('mu_n', 'sigma_n', 'kappa_n', 'nu_n')
 
@@ -124,13 +143,13 @@ extract_updated_samples <- function(samples, cat_levels, group_levels) {
   map(varnames, melt_samples, samples=s) %>%
     reduce(inner_join) %>%
     mutate(category = cond_from_idx(cat_num, cat_levels),
-           group = cond_from_idx(group_num, group_levels))
+           group = cond_from_idx(group_num, group_levels)) %>%
+    select(-group_num, -cat_num)
 
 }
 
 #'
 #'
-#' @export
 updated_samples_predict_lhood <- function(updated_samples, x) {
   
   y <- updated_samples %>%
