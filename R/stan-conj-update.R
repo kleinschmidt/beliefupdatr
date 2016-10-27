@@ -1,3 +1,6 @@
+#' @import dplyr purrr tidyr
+NULL
+
 # Support functions for conjugate belief updating
 
 #' Convert data to stan input for conjugate prior inference

@@ -24,6 +24,5 @@ RoxygenNote: 5.0.1
 Suggests: testthat,
     knitr,
     rmarkdown,
-    supunsup,
-    tidyverse
+    supunsup
 VignetteBuilder: knitr

@@ -13,7 +13,7 @@ This package includes a Stan model for inferring listeners prior beliefs, based 
 
 ```{r preamble}
 
-library(tidyverse)
+library(dplyr)
 library(beliefupdatr)
 
 ## devtools::install_github('kleinschmidt/phonetic-sup-unsup')
