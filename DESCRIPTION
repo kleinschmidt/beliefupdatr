@@ -14,7 +14,8 @@ Imports:
     rstan,
     lazyeval,
     dplyr,
-    tidyr
+    tidyr,
+    reshape2
 Remotes:
     kleinschmidt/daver,
     kleinschmidt/phonetic-sup-unsup
