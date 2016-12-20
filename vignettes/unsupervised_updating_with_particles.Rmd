@@ -49,49 +49,112 @@ $10^60$ ways to categorize all the stimuli encountered.
 # Approximation strategies
 
 While doing exact inference in these situations is often practically impossible,
-there are a number of ways to approximate the exact inference.
+there are a number of ways to approximate the exact inference.  One possibility
+is a _particle filter_, where the full distribution over possible assignments of
+stimuli to categories is approximated by a finite set of _particles_, each of
+which represents one way of classifying the observations seen thus far.  These
+particles are weighted based on how likely their particular hypothesis is given
+the data seen so far.  What makes a particle filter effective is that each
+particle can be updated incrementally as new data comes in, by classifying data
+point $k$ based on how data points $1\ldots k-1$ were classified, and then
+updating the weight based on how well that classification explains all $k$ data
+points.
 
+The filter is initialized by setting each particle based on the common prior
+parameters:
 
+```{r, particle-init}
 
+set.seed(2)
 
+# prior parameter to initialize particles with
+p0 <- list(a = nix2_params(mu=-.5, sigma2=1, kappa=1, nu=1),
+           b = nix2_params(.5, 1, 1, 1))
 
-```{r, }
-
-p0 <- list(a = nix2_params(-2, 1, 10, 10),
-           b = nix2_params(2, 1, 10, 10))
-
+# initialize population of 100 particles
 n_part <- 100
-particles <- map(1:n_part, ~ init_particle(p0))
-
-xs <- rnorm(100) + rep(c(-4, 4), length.out=100)
-
-
-ps10 <- reduce(xs[1:10], filter_chen_liu, .init=particles)
-
-ps20 <- reduce(xs[11:20], filter_chen_liu, .init=ps10)
-
-ps30 <- reduce(xs[21:30], filter_chen_liu, .init=ps20)
-
-
-ps30 %>%
-  sort_by(~ paste(.$z)) %>%
-  map(~ c(as.list(.$z), .$w)) %>%
-  transpose() %>%
-  map(as_vector) %>%
-  as_data_frame()
-
-zs %>%
-  as_data_frame() %>%
-  set_names(1:ncol(.)) %>%
-  mutate(particle=1:length(`1`),
-         weight = map_dbl(ps30, 'w')) %>%
-  gather(trial, cat, -particle, -weight) %>%
-  mutate(trial = as.numeric(trial)) %>%
-  ggplot(aes(x=particle, y=trial, fill=cat, alpha=weight)) +
-  geom_tile()
-
-(ws <- map_dbl(ps30, 'w'))
+particles <- replicate(n_part, init_particle(p0), simplify=FALSE)
 
 ```
+
+THere are different specific methods to fit the particle filter to data, which
+differ (in this case) in how new data points are assigned classifications, and
+how the population of particles is kept "fresh".[^stale-particles] The method
+currently implemented is based on that of @Chen2002, as described in
+@Fearnhead2004.  This method is simpler, but not as effective as that proposed
+by @Fearnhead2004.
+
+[^stale-particles]: One problem with particle filters is that the population of
+particles can become "stale", with just a few particles taking most of the
+weight, which vastly reduces the effective sample size of the particle filter
+and hence the quality of the approximation.  The population hence needs to be
+periodically refreshed, by discarding particles with very small weight and
+replacing them with copies (possibly slightly modified) of particles with larger
+weight.
+
+The function `filter_chen_liu` updates the population of particles:
+
+```{r, particle-update-one}
+
+particles %>%
+  filter_chen_liu(x=0) %>%
+  filter_chen_liu(x=-1) %>%
+  head(2) %>%                           # just look at 2
+  str()
+
+```
+
+To sequentially filter multiple data points, you can use the `reduce` function
+from `purrr`.  For example, this is a pretty easy problem (two clearly separated
+clusters):
+
+```{r, particle-fit}
+
+# data to fit, a mixture with means of -4 and 4
+xs <- rnorm(100) + rep(c(-4, 4), length.out=100)
+
+ps <- reduce(xs[1:30], filter_chen_liu, .init=particles)
+
+```
+
+We can check to see how well the particle filter did by looking at how each
+stimulus is classified by each of the particles (in this visualization, showing
+the weights with opacity and ordering on the x-axis):
+
+```{r, particle-classification}
+
+# extract classifications under each particle and particle weights
+zs <- ps %>%
+  transpose() %>%
+  as_data_frame() %>%
+  mutate(w = as_vector(w)) %>%
+  arrange(w) %>%
+  mutate(particle_id = row_number())  %>%
+  unnest(map(z, ~ data_frame(z=.x, x_id = 1:length(.x))))
+
+ggplot(zs, aes(x=particle_id, y=x_id, fill=z, alpha=w)) +
+  geom_tile() +
+  scale_alpha_continuous(range=c(0.1, 1), trans='log10')
+
+```
+
+The most important factor in determining a particle's weight is _consistency_:
+the weights fall of rapidly as the classififications become less consistent, as
+revealed by the dominance of "stripey" classifications (since our simulated data
+alternates clusters).  Additionally, by setting the prior parameters to have
+slightly offset means we introduced a (very weak) identifiability constraint
+(where `a` is more likely to capture the lower cluster), leading the particles
+where all the low-cluster observations are `a` and the high cluster observations
+are `b` to outperform the opposite mapping.
+
+Viewed with linear opacity scaling this is even more apparent:
+
+```{r }
+ggplot(zs, aes(x=particle_id, y=x_id, fill=z, alpha=w)) +
+  geom_tile() +
+  scale_alpha_continuous(range=c(0.1, 1))
+
+```
+
 
 .
