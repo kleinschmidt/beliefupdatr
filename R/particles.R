@@ -143,23 +143,3 @@ d_predict_particles <- function(x, particles, log=FALSE) {
     transpose() %>%
     map(~ lift(cbind)(.x) %*% ws)
 }
-
-
-  xs <- seq(-6, 6, length.out=100)
-  
-  ps30 %>%
-    transpose() %>%
-    as_data_frame() %>%
-    mutate(w = as_vector(w)) %>%
-    mutate(particle_id = row_number(),
-           predict = at_depth(params, 2, . %>%
-                                           particle_params_to_nix2() %>%
-                                           d_nix2_predict(x=xs))) %>%
-    unnest(map(predict, . %>% as_data_frame()%>% mutate(x=xs)))
-
-                %>% gather('category', 'lhood', -x)))
-
-  %>%
-    ggplot(aes(x=x, y=lhood, group=paste(particle_id, category),
-               color=category, alpha=w)) +
-    geom_line()

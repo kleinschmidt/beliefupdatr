@@ -65,6 +65,12 @@ parameters:
 
 ```{r, particle-init}
 
+devtools::load_all()
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+
 set.seed(2)
 
 # prior parameter to initialize particles with
