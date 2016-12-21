@@ -42,7 +42,17 @@ NULL
 #       see Murphy eq 171). This can be done with nix2_update() with summary stats,
 #       wrapped by a nix2_marginal_likelihood() function
 
+#' Initialize one particle based on NIX2 parameters
+#'
+#' @param params NIX2 parameters
+#' @param n Population size
+#'
+#' @return A (population of) particle(s)
+#'
+#' @export
 init_particle <- function(params) {
+  assert_that(is_nix2_params(params))
+
   within(list(), {
     w <- 1
     z <- vector()
@@ -50,6 +60,13 @@ init_particle <- function(params) {
                                  sumstats = list(n=0, xbar=0, ss=0),
                                  marg_log_lhood = 0))
   })
+}
+
+#' @describeIn init_particle Initialize a population of particles
+#'
+#' @export
+init_particles <- function(params, n) {
+  replicate(n, init_particle(params), simplify=FALSE)
 }
 
 summary_stats_update <- function(ss, x) {
@@ -113,9 +130,12 @@ particle_params_to_nix2 <- function(params) {
 #'
 #' @param x Points to calculate posterior predictive density at
 #' @param particle The particle
+#' @param particles List of particles in population (weights must sum to 1)
 #' @param log =FALSE
 #'
-#' @return A named list of predictive densities for each category in particle
+#' @return A named list of predictive (log-)densities for each category
+#'
+#' @export
 d_predict_particle <- function(x, particle, log=FALSE) {
   assert_that(has_name(particle, 'params'))
   map(particle$params,
@@ -124,18 +144,13 @@ d_predict_particle <- function(x, particle, log=FALSE) {
         d_nix2_predict(p=., x=x, log=log))
 }
 
-d_part_pred_df <- function(x, particles, log=FALSE) {
-  d_predict_particles(x, particles, log) %>%
-    map(as.vector) %>%
-    as_data_frame() %>%
-    mutate(x=x) %>%
-    gather('category', 'pred', -x)
-}
-
-
-
+#' @describeIn d_predict_particle Posterior predictive distribution for
+#'   population of particles
+#'
+#' @export
 d_predict_particles <- function(x, particles, log=FALSE) {
   ws <- map_dbl(particles, 'w')
+  assert_that(all.equal(sum(ws), 1))
 
   preds <- map(particles, d_predict_particle, x=x, log=FALSE) %>%
     transpose() %>%                     # from list of particles to list of
@@ -150,3 +165,13 @@ d_predict_particles <- function(x, particles, log=FALSE) {
   }
   
 }
+
+d_part_pred_df <- function(x, particles, log=FALSE) {
+  d_predict_particles(x, particles, log) %>%
+    map(as.vector) %>%
+    as_data_frame() %>%
+    mutate(x=x) %>%
+    gather('category', 'pred', -x)
+}
+
+
