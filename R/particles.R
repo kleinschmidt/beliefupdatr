@@ -124,12 +124,12 @@ d_predict_particle <- function(x, particle, log=FALSE) {
         d_nix2_predict(p=., x=x, log=log))
 }
 
-d_part_pred_df <- function(x, particle, log=FALSE) {
-  
-}
-
-d_predict_particles <- function(x, particles, log=FALSE) {
-  
+d_part_pred_df <- function(x, particles, log=FALSE) {
+  d_predict_particles(x, particles, log) %>%
+    map(as.vector) %>%
+    as_data_frame() %>%
+    mutate(x=x) %>%
+    gather('category', 'pred', -x)
 }
 
 
@@ -137,9 +137,16 @@ d_predict_particles <- function(x, particles, log=FALSE) {
 d_predict_particles <- function(x, particles, log=FALSE) {
   ws <- map_dbl(particles, 'w')
 
-  particles %>%
-    map(c('params', category)) %>%
-    at_depth(2, . %>% particle_params_to_nix2 %>% d_nix2_predict(x=-8:8)) %>%
-    transpose() %>%
-    map(~ lift(cbind)(.x) %*% ws)
+  preds <- map(particles, d_predict_particle, x=x, log=FALSE) %>%
+    transpose() %>%                     # from list of particles to list of
+                                        # categories
+    map(~ lift(cbind)(.) %*% ws)        # take weighted average of each
+                                        # particles' prediction
+
+  if (log) {
+    map(preds, base::log)
+  } else {
+    preds
+  }
+  
 }
