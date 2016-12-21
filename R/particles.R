@@ -142,11 +142,7 @@ d_predict_particles <- function(x, particles, log=FALSE) {
     at_depth(2, . %>% particle_params_to_nix2 %>% d_nix2_predict(x=-8:8)) %>%
     transpose() %>%
     map(~ lift(cbind)(.x) %*% ws)
-
-  %>%
-    map(
-
-    }
+}
 
 
   xs <- seq(-6, 6, length.out=100)
