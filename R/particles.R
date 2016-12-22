@@ -51,7 +51,7 @@ NULL
 #'
 #' @export
 init_particle <- function(params) {
-  assert_that(is_nix2_params(params))
+  walk(params, ~ assert_that(is_nix2_params(.)))
 
   within(list(), {
     w <- 1
