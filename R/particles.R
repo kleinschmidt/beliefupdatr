@@ -126,14 +126,18 @@ particle_params_to_nix2 <- function(params) {
   lift(nix2_update)(p=params$prior, params$sumstats)
 }
 
-#' Posterior predictive function for a single particle
+#' Posterior predictive density functions
+#'
+#' Posterior predictive distribution for a single particle
 #'
 #' @param x Points to calculate posterior predictive density at
 #' @param particle The particle
 #' @param particles List of particles in population (weights must sum to 1)
 #' @param log =FALSE
 #'
-#' @return A named list of predictive (log-)densities for each category
+#' @return A named list of predictive (log-)densities for each category, or a
+#'   data_frame with columns x, category, pred (density), particle_id, and
+#'   weight
 #'
 #' @export
 d_predict_particle <- function(x, particle, log=FALSE) {
@@ -144,11 +148,12 @@ d_predict_particle <- function(x, particle, log=FALSE) {
         d_nix2_predict(p=., x=x, log=log))
 }
 
-#' @describeIn d_predict_particle Posterior predictive distribution for
-#'   population of particles
+#' @describeIn d_predict_particle Marginal posterior predictive distribution for
+#'   population of particles (the weighted average of the individual particles'
+#'   posterior predictive distributions)
 #'
 #' @export
-d_predict_particles <- function(x, particles, log=FALSE) {
+d_predict_particles_marginal <- function(x, particles, log=FALSE) {
   ws <- map_dbl(particles, 'w')
   assert_that(all.equal(sum(ws), 1))
 
@@ -163,15 +168,33 @@ d_predict_particles <- function(x, particles, log=FALSE) {
   } else {
     preds
   }
-  
 }
 
-d_part_pred_df <- function(x, particles, log=FALSE) {
-  d_predict_particles(x, particles, log) %>%
-    map(as.vector) %>%
+#' @describeIn d_predict_particle Posterior predictive densities for all
+#'   particles in a population, organized into a data_frame.
+#'
+#' @export
+d_predict_particles_df <- function(x, particles, log=FALSE) {
+
+  map(particles, d_predict_particle, x=x, log=log) %>%
+    map(~ as_data_frame(.) %>%
+          mutate(x=x) %>%
+          gather('category', 'pred', -x)) %>%
+    map2(seq_along(.), ~ mutate(.x, particle_id=.y)) %>%
+    map2(map_dbl(particles, 'w'), ~ mutate(.x, weight=.y)) %>%
+    bind_rows()
+
+}
+
+#' @describeIn d_predict_particle Marginal posterior predictive distribution
+#'   function for a whole population, as a data_frame
+#'
+#' @export
+d_predict_particles_marginal_df <- function(x, particles, log=FALSE) {
+
+  d_predict_particles_marginal(x, particles, log) %>%
     as_data_frame() %>%
     mutate(x=x) %>%
     gather('category', 'pred', -x)
+
 }
-
-

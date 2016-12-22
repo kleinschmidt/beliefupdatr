@@ -2,12 +2,18 @@
 % Please edit documentation in R/particles.R
 \name{d_predict_particle}
 \alias{d_predict_particle}
-\alias{d_predict_particles}
-\title{Posterior predictive function for a single particle}
+\alias{d_predict_particles_df}
+\alias{d_predict_particles_marginal}
+\alias{d_predict_particles_marginal_df}
+\title{Posterior predictive density functions}
 \usage{
 d_predict_particle(x, particle, log = FALSE)
 
-d_predict_particles(x, particles, log = FALSE)
+d_predict_particles_marginal(x, particles, log = FALSE)
+
+d_predict_particles_df(x, particles, log = FALSE)
+
+d_predict_particles_marginal_df(x, particles, log = FALSE)
 }
 \arguments{
 \item{x}{Points to calculate posterior predictive density at}
@@ -19,14 +25,23 @@ d_predict_particles(x, particles, log = FALSE)
 \item{particles}{List of particles in population (weights must sum to 1)}
 }
 \value{
-A named list of predictive (log-)densities for each category
+A named list of predictive (log-)densities for each category, or a
+  data_frame with columns x, category, pred (density), particle_id, and
+  weight
 }
 \description{
-Posterior predictive function for a single particle
+Posterior predictive distribution for a single particle
 }
 \section{Functions}{
 \itemize{
-\item \code{d_predict_particles}: Posterior predictive distribution for
-population of particles
+\item \code{d_predict_particles_marginal}: Marginal posterior predictive distribution for
+population of particles (the weighted average of the individual particles'
+posterior predictive distributions)
+
+\item \code{d_predict_particles_df}: Posterior predictive densities for all
+particles in a population, organized into a data_frame.
+
+\item \code{d_predict_particles_marginal_df}: Marginal posterior predictive distribution
+function for a whole population, as a data_frame
 }}
 
