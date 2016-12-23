@@ -25,9 +25,9 @@ d_predict_particles_marginal_df(x, particles, log = FALSE)
 \item{particles}{List of particles in population (weights must sum to 1)}
 }
 \value{
-A named list of predictive (log-)densities for each category, or a
-  data_frame with columns x, category, pred (density), particle_id, and
-  weight
+A named list of predictive (log-)densities for each category (as a
+  vector, one per x), or a data_frame with columns x, category, pred
+  ([log-]density), particle_id, and weight
 }
 \description{
 Posterior predictive distribution for a single particle

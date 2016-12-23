@@ -135,9 +135,9 @@ particle_params_to_nix2 <- function(params) {
 #' @param particles List of particles in population (weights must sum to 1)
 #' @param log =FALSE
 #'
-#' @return A named list of predictive (log-)densities for each category, or a
-#'   data_frame with columns x, category, pred (density), particle_id, and
-#'   weight
+#' @return A named list of predictive (log-)densities for each category (as a
+#'   vector, one per x), or a data_frame with columns x, category, pred
+#'   ([log-]density), particle_id, and weight
 #'
 #' @export
 d_predict_particle <- function(x, particle, log=FALSE) {
