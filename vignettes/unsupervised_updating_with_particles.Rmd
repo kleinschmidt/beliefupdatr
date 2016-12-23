@@ -66,6 +66,8 @@ parameters:
 ```{r, particle-init}
 
 devtools::load_all()
+
+
 library(dplyr)
 library(purrr)
 library(tidyr)
@@ -79,7 +81,7 @@ p0 <- list(a = nix2_params(mu=-.5, sigma2=1, kappa=1, nu=1),
 
 # initialize population of 100 particles
 n_part <- 100
-particles <- replicate(n_part, init_particle(p0), simplify=FALSE)
+particles <- init_particles(p0, n_part)
 
 ```
 
@@ -123,11 +125,39 @@ ps <- reduce(xs[1:30], filter_chen_liu, .init=particles)
 
 ```
 
-We can check to see how well the particle filter did by looking at how each
-stimulus is classified by each of the particles (in this visualization, showing
-the weights with opacity and ordering on the x-axis):
+What are the distributions that the particle filter infers for this data?
 
-```{r, particle-classification}
+```{r, particle-post-pred, fig.width=9.75, fig.height=3.66}
+
+x_pred <- seq(-8, 8, length.out=200)
+
+d_predict_particles_marginal_df(x_pred, ps) %>%
+  ggplot(aes(x=x, color=category)) +
+  geom_histogram(data=data_frame(x=xs,
+                                 category=rep(c('a', 'b'), length.out=length(x))),
+                 aes(y=..density..*2), position='identity',
+                 alpha=0.2, fill='black', color=NA) +
+  geom_line(aes(y=pred))
+
+# plot each of the particles individually
+d_predict_particles_df(x_pred, ps) %>%
+  ggplot(aes(x=x, color=category)) +
+  geom_histogram(data=data_frame(x=xs,
+                                 category=rep(c('a', 'b'), length.out=length(x))),
+                 aes(y=..density..*2), position='identity',
+                 alpha=0.2, fill='black', color=NA) +
+  geom_line(aes(y=pred, group=paste(category, particle_id), alpha=weight)) +
+  scale_alpha(range=c(0.05, 1))
+
+```
+
+From these plots we can see that a few particles dominate, and these are the
+ones that correspond to predictive distributions that match the data well.  We
+can see why by looking at how each particle (on the x axis) classifies the
+training data (each row shows one trial), and the weight it's assigned by the
+end (opacity, on a log-scale):
+
+```{r, particle-classification, fig.width=8.2, fig.height=2.8}
 
 # extract classifications under each particle and particle weights
 zs <- ps %>%
@@ -140,7 +170,8 @@ zs <- ps %>%
 
 ggplot(zs, aes(x=particle_id, y=x_id, fill=z, alpha=w)) +
   geom_tile() +
-  scale_alpha_continuous(range=c(0.1, 1), trans='log10')
+  scale_alpha(range=c(0.1, 1), trans='log10') +
+  coord_equal()
 
 ```
 
@@ -155,12 +186,12 @@ are `b` to outperform the opposite mapping.
 
 Viewed with linear opacity scaling this is even more apparent:
 
-```{r }
+```{r particle-class-linear, fig.width=8.2, fig.height=2.8}
 ggplot(zs, aes(x=particle_id, y=x_id, fill=z, alpha=w)) +
   geom_tile() +
-  scale_alpha_continuous(range=c(0.1, 1))
+  scale_alpha(range=c(0.1, 1)) +
+  coord_equal()
 
 ```
-
 
 .
