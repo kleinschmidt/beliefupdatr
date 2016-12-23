@@ -160,8 +160,9 @@ d_predict_particles_marginal <- function(x, particles, log=FALSE) {
   preds <- map(particles, d_predict_particle, x=x, log=FALSE) %>%
     transpose() %>%                     # from list of particles to list of
                                         # categories
-    map(~ lift(cbind)(.) %*% ws)        # take weighted average of each
+    map(~ lift(cbind)(.) %*% ws) %>%    # take weighted average of each
                                         # particles' prediction
+    map(as.vector)
 
   if (log) {
     map(preds, base::log)
