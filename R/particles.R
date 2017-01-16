@@ -149,9 +149,11 @@ putative_particles <- function(particles, x) {
 # algorithm is from Clifford, Carpenter, and Fearnhead (1999), as described in
 # Fearnhead and Clifford (2003, Appendix B)
 #
-# THIS IS WRONG. does not always return teh requested number of samples (fewer
-# sometimes, never more).  But this only seems to be a big problem when you've
-# got size ≈ length(x), which isn't going to happen often (I think).
+# I THINK THIS IS WRONG. (but probably okay for these purposes where N << M)
+#
+# does not always return teh requested number of samples (fewer sometimes, never
+# more).  But this only seems to be a big problem when you've got size ≈
+# length(x), which isn't going to happen often (I think).
 sample_stratified <- function(x, size, prob) {
   K <- sum(prob) / size
   U <- runif(1, 0, K)
@@ -166,45 +168,63 @@ sample_stratified <- function(x, size, prob) {
   x[include]
 }
 
-# find cutoff of weights to include.  return value is c, such that
-#   sum(min(c*w, 1)) = N.
-#
-# strategy is to go through weights from smallest to largest, to find the first
-#   w[i] where sum(w[1:i]) / w[i] < (N-(M-i)).  Then 1/c is between w[i-1] and
-#   w[i], and we can easily solve for it with sum(w[1:i-1]) * c + M - (i-1) = N.
-#   if you run out of w's before you find the right i, then c = 1/N.
-#
-# actually: more efficient to go largest to smallest. then once we find first i
-#   where sum(w[1:i])/w[i] >= (N-(M-i)), solve for sum(w[1:i])*c + M-i = N.
-#
-# (that's more efficient because it's more likely that there's none that are kept
-weight_cutoff <- function(w, N) {
-  M <- length(w)
-  w <- sort(w, decreasing=TRUE)
-  
-  tot <- sum(w)                         # probably 1 but just to be safe...
-  # i is the first weight that is _not_ automatically carried over.
-  for (i in seq_along(w)) {
+# resample particles so that there's at most N, according to the algorithm from
+# Fearnhead and Clifford (2003).  This preserves all the particles that have
+# weight above some cutoff, and resamples the rest and sets the weights to
+# 1/cutoff
+resample_fearnhead <- function(particles, N) {
+  # sort by decreasing weight
+  M <- length(particles)
+  if (M <= N) return(particles)
+
+  # should be 1 but just in case...
+  tot <- particles %>% map_dbl("w") %>% sum()
+
+  # find cutoff of weights to include.  return value is c, such that
+  #   sum(min(c*w, 1)) = N.
+  #
+  # strategy is to go through weights from smallest to largest, to find the first
+  #   w[i] where sum(w[1:i]) / w[i] < (N-(M-i)).  Then 1/c is between w[i-1] and
+  #   w[i], and we can easily solve for it with sum(w[1:i-1]) * c + M - (i-1) = N.
+  #   if you run out of w's before you find the right i, then c = 1/N.
+  #
+  # actually: more efficient to go largest to smallest. then once we find first i
+  #   where sum(w[1:i])/w[i] >= (N-(M-i)), solve for sum(w[1:i])*c + M-i = N.
+  #
+  # (that's more efficient because it's more likely that there's none that are kept
+  particles <- sort_by(particles, ~ -.x[['w']])
+  # (i will be the first weight that is _not_ automatically carried over.)
+  for (i in seq_along(particles)) {
     # so 1:(i-1) contriubtes 1 each, and the rest contribute
     # less than sum(w[i:end]) / w[i] (1/c will be <= w[i])
-    output[i] <- tot/w[i] + i-1
-    if (tot / w[i] + i-1 >= N) {
+    if (tot / particles[[i]][['w']] + i-1 >= N) {
       # solve for c in sum(w[i:end]) * c + i-1 = N
       cutoff <- (N - (i-1)) / tot
-      return(1/cutoff)
+      break
     }
-    # incrementally update sum
-    tot <- tot - w[i]
+    # incrementally update sum:
+    tot <- tot - particles[[i]][['w']]
   }
+
+  # not sure if this can happen, but make sure we return at most N
+  if (i > N) return(particles[1:N])
+  
+  # keep particles[i:i-1], and resample N-(i-1) from particles[i:end]
+  new_particles <- 
+    particles[i:M] %>%
+    sample_stratified(., N-(i-1), map_dbl(., 'w')) %>%
+    map(update_list, w = 1/cutoff) %>%
+    c(particles[1:(i-1)], .)
+
+  return(new_particles)
 }
 
-check_weight_cutoff <- function(wc, w) {
-  sum(ifelse(wc*w > 1, 1, w))
-}
-  
-
-filter_fearnhead <- function(particles, x) {
-  
+filter_fearnhead <- function(particles, x, N=length(particles)) {
+  particles %>%
+    map(update_particle_fearnhead, x) %>%
+    unlist(recursive=FALSE) %>%
+    normalize_weights() %>%
+    resample_fearnhead(N)
 }
 
 ################################################################################
