@@ -107,6 +107,11 @@ update_particle_chen_liu <- function(particle, x) {
     unlist(recursive=FALSE)
 }
 
+# we need to re-normalize weights because we're not computing exactly p(z|y), 
+# but rather the un-normalized posterior p(y|z)p(z).  In the ratio of these, the
+# normalizing constants p(y) don't cancel because the set of data points is
+# different.  But the error is the same across particles so it's just a matter
+# of scaling the weights to have unit sum.
 normalize_weights <- function(particles) {
   sum_w <- sum(map_dbl(particles, 'w'))
   map(particles, update_list, w = ~ w / sum_w)
