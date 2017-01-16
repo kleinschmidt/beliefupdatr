@@ -122,6 +122,91 @@ filter_chen_liu <- function(particles, x) {
     normalize_weights()
 }
 
+# Fearnhead (2004) resampling scheme:
+# 
+# 1. Generate all M putative particles from assignments of data to category for
+#    each particle and update weights.
+# 
+# 2. Based on new weights, find cut-off $1/c$ such that
+#    $\sum_{i=1}^M min(cw_i, 1) = N$.
+#
+# 3. Keep all the particles with weights > 1/c, and resample from the remaining
+#    particles. (using stratified sampling so that each is sampled at most once)
+
+# update one particle with all possible assignments
+update_particle_fearnhead <- function(particle, x) {
+  map(names(particle$params), ~ assign_data(particle, x, .))
+}
+
+putative_particles <- function(particles, x) {
+  particles %>%
+    map(update_particle_fearnhead, x) %>%
+    unlist(recursive=FALSE) %>%
+    normalize_weights()
+}
+
+
+# algorithm is from Clifford, Carpenter, and Fearnhead (1999), as described in
+# Fearnhead and Clifford (2003, Appendix B)
+#
+# THIS IS WRONG. does not always return teh requested number of samples (fewer
+# sometimes, never more).  But this only seems to be a big problem when you've
+# got size ≈ length(x), which isn't going to happen often (I think).
+sample_stratified <- function(x, size, prob) {
+  K <- sum(prob) / size
+  U <- runif(1, 0, K)
+  include <- rep(FALSE, length(x))
+  for (i in seq_along(x)) {
+    U <- U - prob[i]
+    if (U < 0) {
+      include[i] <- TRUE
+      U <- U + K
+    }
+  }
+  x[include]
+}
+
+# find cutoff of weights to include.  return value is c, such that
+#   sum(min(c*w, 1)) = N.
+#
+# strategy is to go through weights from smallest to largest, to find the first
+#   w[i] where sum(w[1:i]) / w[i] < (N-(M-i)).  Then 1/c is between w[i-1] and
+#   w[i], and we can easily solve for it with sum(w[1:i-1]) * c + M - (i-1) = N.
+#   if you run out of w's before you find the right i, then c = 1/N.
+#
+# actually: more efficient to go largest to smallest. then once we find first i
+#   where sum(w[1:i])/w[i] >= (N-(M-i)), solve for sum(w[1:i])*c + M-i = N.
+#
+# (that's more efficient because it's more likely that there's none that are kept
+weight_cutoff <- function(w, N) {
+  M <- length(w)
+  w <- sort(w, decreasing=TRUE)
+  
+  tot <- sum(w)                         # probably 1 but just to be safe...
+  # i is the first weight that is _not_ automatically carried over.
+  for (i in seq_along(w)) {
+    # so 1:(i-1) contriubtes 1 each, and the rest contribute
+    # less than sum(w[i:end]) / w[i] (1/c will be <= w[i])
+    output[i] <- tot/w[i] + i-1
+    if (tot / w[i] + i-1 >= N) {
+      # solve for c in sum(w[i:end]) * c + i-1 = N
+      cutoff <- (N - (i-1)) / tot
+      return(1/cutoff)
+    }
+    # incrementally update sum
+    tot <- tot - w[i]
+  }
+}
+
+check_weight_cutoff <- function(wc, w) {
+  sum(ifelse(wc*w > 1, 1, w))
+}
+  
+
+filter_fearnhead <- function(particles, x) {
+  
+}
+
 ################################################################################
 # Doing something useful with particles:
 
