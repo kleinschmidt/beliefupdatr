@@ -85,7 +85,7 @@ particles <- init_particles(p0, n_part)
 
 ```
 
-THere are different specific methods to fit the particle filter to data, which
+There are different specific methods to fit the particle filter to data, which
 differ (in this case) in how new data points are assigned classifications, and
 how the population of particles is kept "fresh".[^stale-particles] The method
 currently implemented is based on that of @Chen2002, as described in
