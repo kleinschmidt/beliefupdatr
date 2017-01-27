@@ -121,7 +121,8 @@ clusters):
 # data to fit, a mixture with means of -4 and 4
 xs <- rnorm(100) + rep(c(-4, 4), length.out=100)
 
-ps <- reduce(xs[1:30], filter_chen_liu, .init=particles)
+# ps <- reduce(xs[1:30], filter_chen_liu, .init=particles)
+ps <- reduce(xs[1:30], filter_fearnhead, .init=particles[1], N=length(particles))
 
 ```
 
