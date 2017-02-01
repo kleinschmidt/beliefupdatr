@@ -214,7 +214,9 @@ resample_fearnhead <- function(particles, N) {
     particles[i:M] %>%
     sample_stratified(., N-(i-1), map_dbl(., 'w')) %>%
     map(update_list, w = 1/cutoff) %>%
-    c(particles[1:(i-1)], .)
+    c(particles[seq_len(i-1)], .)
+
+  assert_that(length(new_particles) == min(length(particles), N))
 
   return(new_particles)
 }
@@ -224,7 +226,12 @@ filter_fearnhead <- function(particles, x, N=length(particles)) {
     map(update_particle_fearnhead, x) %>%
     unlist(recursive=FALSE) %>%
     normalize_weights() %>%
-    resample_fearnhead(N)
+    resample_fearnhead(N) ->
+    new_particles
+
+  assert_that(length(new_particles) <= N)
+  return(new_particles)
+
 }
 
 ################################################################################
@@ -265,7 +272,7 @@ d_predict_particle <- function(x, particle, log=FALSE) {
 #' @export
 d_predict_particles_marginal <- function(x, particles, log=FALSE) {
   ws <- map_dbl(particles, 'w')
-  assert_that(all.equal(sum(ws), 1))
+  assert_that(isTRUE(all.equal(sum(ws), 1)))
 
   preds <- map(particles, d_predict_particle, x=x, log=FALSE) %>%
     transpose() %>%                     # from list of particles to list of
