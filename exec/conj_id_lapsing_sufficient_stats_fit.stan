@@ -6,19 +6,21 @@
  *
  * This version has a lapse rate parameter (probability of random guessing)
  *
- * Input is in the form of raw data points for observations
+ * Input is in the form of the sufficient statistics of each category during
+ * exposure
  *
  * Dave Kleinschmidt
- * Apr 2015
+ * Feb 2017
  */
 
 data {
-  int n;                        // number of training observations
-  real x[n];                    // training observations
   int m;                        // number of categories
-  int z[n];                     // categories of each training observation
   int l;                        // number of subjects
-  int y[n];                     // subject labels
+
+  int n[m,l];                   // number of training observations
+  real xbar[m,l];               // mean of training observations
+  real xsd[m,l];                // sample standard deviation of training obs
+
   int n_test;                   // number of test trials
   real x_test[n_test];          // locations of test trials
   int y_test[n_test];           // subject labels for test trials
@@ -26,29 +28,8 @@ data {
 }
 
 transformed data {
-  real xbar[m,l];               // mean
   real ss[m,l];                 // sum of squares
-  real n_cat[m,l];              // number of obs per category
-  real n_each;
-
-  xbar = rep_array(0, m,l);
-  ss = rep_array(0, m,l);
-  n_cat = rep_array(0, m,l);
-
-  // running mean/sum-of-squares calculations
-  for (j in 1:n) {
-    real delta;
-    int cat;
-    int subj;
-    cat = z[j];
-    subj = y[j];
-    n_cat[cat,subj] = n_cat[cat,subj] + 1;
-    delta = x[j] - xbar[cat,subj];
-    xbar[cat,subj] = xbar[cat,subj] + delta / n_cat[cat,subj];
-    ss[cat,subj] = ss[cat,subj] + delta * (x[j] - xbar[cat,subj]);
-  }
-
-  n_each = n / (m*l);           /* avg. number of observations per category */
+  ss = (n-1) .* xsd;
 }
 
 parameters {
