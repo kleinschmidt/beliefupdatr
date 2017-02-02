@@ -195,4 +195,103 @@ ggplot(zs, aes(x=particle_id, y=x_id, fill=z, alpha=w)) +
 
 ```
 
+# Unsupervised distributional learning
+
+Kleinschmidt and Jaeger (2016) tested how an incremental belief updating model
+could fit human behavior in unsupervised distributional learning.  However, they
+made a simplifying assumption that belief updating itself was supervised (that
+the mean and variance of each cluster was known to the subjects).
+
+With a particle filter, we can back off on that assumption.
+
+```{r load-dist-learn-data}
+
+require(supunsup)
+
+dat <- supunsup::supunsup_clean
+
+# pull out one subject from each condition
+dat_one <- dat %>%
+  group_by(bvotCond) %>%
+  filter(subject == first(subject))
+
+ggplot(dat_one, aes(x=vot, fill=bvotCond)) +
+  geom_histogram(binwidth=10) +
+  facet_grid(.~bvotCond)
+
+```
+
+```{r set-up-particles}
+
+# inferred prior from K&J(2016)
+
+prior <- list(b = nix2_params(mu=-11, sigma2=19^2, kappa=243, nu=772),
+              p = nix2_params(mu=56, sigma2=16^2, kappa=243, nu=772))
+n_part <- 100
+
+```
+
+```{r}
+
+updated <- dat_one %>%
+  nest() %>%
+  mutate(updated_particles =
+           map(data, ~ reduce(.$vot,
+                        filter_fearnhead, 
+                        .init=init_particles(prior, 1), 
+                        N=n_part)))
+
+
+reduce(dat_one$vot[1:222], filter_fearnhead, .init=init_particles(prior, 1), N=n_part)
+
+
+
+```
+
+```{r plot-updated}
+
+updated_pred <- 
+  updated %>%
+  mutate(updated_pred = map(updated_particles,
+                            d_predict_particles_marginal_df,
+                            x = -20:70)) %>%
+  unnest(updated_pred) %>%
+  rename(vot=x)
+
+ggplot(updated_pred, aes(x=vot, y=pred, linetype=category, color=bvotCond)) +
+  geom_line()
+
+updated_pred %>%
+  group_by(vot, bvotCond) %>%
+  mutate(pred = pred / sum(pred)) %>%
+  filter(category == 'p') %>%
+  ggplot(aes(x=vot, y=pred, color=bvotCond)) +
+  geom_line() +
+  geom_pointrange(data=dat, aes(y=respP, group=bvotCond), stat='summary', fun.data=mean_cl_boot)
+
+```
+
+```{r classification-training-data}
+
+training_classes_df <- function(ps) {
+  ps %>%
+    transpose() %>%
+    as_data_frame() %>%
+    mutate(w = as_vector(w)) %>%
+    arrange(w) %>%
+    mutate(particle_id = row_number())  %>%
+    unnest(map(z, ~ data_frame(z=.x, x_id = 1:length(.x))))
+}
+
+## how is training data classified?
+
+updated %>% unnest(map(updated_particles, training_classes_df)) %>%
+  ggplot(aes(x=x_id, y=particle_id, fill=z, alpha=w)) +
+  geom_tile() +
+  facet_wrap(~bvotCond)
+
+
+```
+
 .
+
