@@ -28,8 +28,16 @@ data {
 }
 
 transformed data {
+  real n_each;
   real ss[m,l];                 // sum of squares
-  ss = (n-1) .* xsd;
+  for (i in 1:m) {
+    for (j in 1:l) {
+      ss[i,j] = (n[i,j] - 1) * xsd[i,j];
+    }
+  }
+
+  n_each = n[1,1];
+
 }
 
 parameters {
@@ -55,12 +63,12 @@ transformed parameters {
   // Murphy (2007)
   for (cat in 1:m) {
     for (subj in 1:l) {
-      kappa_n[cat,subj] = kappa_0 + n_cat[cat,subj];
-      nu_n[cat,subj] = nu_0 + n_cat[cat,subj];
-      mu_n[cat,subj] = (mu_0[cat] * kappa_0 + xbar[cat,subj] * n_cat[cat,subj]) / kappa_n[cat,subj];
+      kappa_n[cat,subj] = kappa_0 + n[cat,subj];
+      nu_n[cat,subj] = nu_0 + n[cat,subj];
+      mu_n[cat,subj] = (mu_0[cat] * kappa_0 + xbar[cat,subj] * n[cat,subj]) / kappa_n[cat,subj];
       sigma_n[cat,subj] = sqrt((nu_0*sigma_0[cat]^2 +
                                  ss[cat,subj] +
-                                 (n_cat[cat,subj]*kappa_0)/(kappa_n[cat,subj]) *
+                                 (n[cat,subj]*kappa_0)/(kappa_n[cat,subj]) *
                                    (mu_0[cat] - xbar[cat,subj])^2
                                  ) /
                                 nu_n[cat,subj]);
