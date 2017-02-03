@@ -139,6 +139,72 @@ prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
 }
 
 
+
+#' Convert data into format for incremental updating with sufficient statistics
+#'
+#' Approximates true incremental updating by breaking data into blocks of equal
+#' numbers of trials, and then using training data from previous n-0.5 blocks to
+#' update beliefs for test data from block n.  Further, uses the _overall_
+#' sufficient statistics in each group, just adjusting the number of _trials_ in
+#' each block.  This is because (in the dataset this was originally developed
+#' for), the trial order was different for each subject and so when fitting
+#' aggregate data it makes sense to use the aggregate statistics.
+#'
+#' For now, the total number of trials in training and test need to be equal.
+#'
+#' @inheritParams prepare_data_conj_infer_prior
+#' @param n_blocks Number of blocks to divide data into.
+#'
+#' @return A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
+#'
+#' @export
+prepare_data_incremental_suff_stats <- function(training, test, cue, category,
+                                                response, group, n_blocks) {
+  assert_that(max(training$trial) == max(test$trial))
+
+  # calculate overall summary statistics
+  training <- check_training_data(training, category, group)
+  ss <- training_ss_matrix(training, list(category, group), cue, 
+                           xbar = mean, n = length, xsd = sd)
+  
+  # expand sufficient stats over blocks (just by adjusting the counts, as if
+  # they've seen up to half the current block's worth of training data)
+  ss_blocks <-
+    map(seq_len(n_blocks), ~ update_list(ss, n = ~ n / n_blocks * (.x-0.5))) %>%
+    transpose() %>%
+    map(lift(cbind))
+
+  # generate test counts broken out by block
+  # the trick is to line up the group numbers. but the way they're generated for
+  # the training data means that you can do group_num + 
+  test_counts_blocks <-
+    test %>%
+    mutate(block = ntile(trial, n_blocks)) %>%
+    group_by(block) %>%
+    nest() %>%
+    mutate(counts=map(data, ~ test_counts(training, ., cue, category, response,
+                                          group))) %>%
+    unnest(counts) %>%
+    mutate(group_block = as.numeric(bvotCond) +
+             (block-1) * length(levels(bvotCond)))
+
+  within(ss_blocks, {
+    m <- dim(xbar)[1]
+    l <- dim(xbar)[2]
+    
+    x_test <- test_counts_blocks[[cue]]
+    y_test <- test_counts_blocks[['group_block']]
+    z_test_counts <-
+      test_counts_blocks %>%
+      select_(.dots=levels(training[[category]])) %>%
+      as.matrix()
+
+    n_test <- length(x_test)
+  })
+
+}
+
+
 # rename dimensions to make melting easier
 rename_dims <- function(x, var, new_names) {
   names(dimnames(x[[var]])) <- new_names
