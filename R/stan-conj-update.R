@@ -98,6 +98,16 @@ training_ss_matrix <- function(training, groupings, cue, ...) {
     set_names(stats)
 }
 
+#' Convert data into format for bulk updating with sufficient statistics
+#'
+#' Like \code{\link{prepare_data_conj_infer_prior}}, but for sufficient
+#' statistics for training data (count, mean, and sample standard deviation)
+#' instead of raw training observations.
+#' 
+#' @inheritParams prepare_data_conj_infer_prior
+#'
+#' @return A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
+#' 
 #' @export
 prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
                                                      category, response, group) {
@@ -201,8 +211,6 @@ extract_updated_samples <- function(fitted, cat_levels, group_levels,
 
 }
 
-#'
-#'
 updated_samples_predict_lhood <- function(updated_samples, x) {
   
   y <- updated_samples %>%
