@@ -2,6 +2,35 @@
 #' @importFrom reshape2 melt
 NULL
 
+check_training_data <- function(training, category, group) {
+  training[[category]] <- training[[category]] %>% as.factor() %>% droplevels()
+  training[[group]] <- training[[group]] %>% as.factor() %>% droplevels()
+  return(training)
+}
+
+test_counts <- function(training, test, cue, category, response, group) {
+  cat_levels <- training[[category]] %>% levels()
+  subj_levels <- training[[group]] %>% levels()
+
+  test[[response]] <- test[[response]] %>% factor(levels=cat_levels)
+  test[[group]] <- test[[group]] %>% factor(levels=subj_levels)
+  
+  if (any(is.na(test[[response]]))) {
+    stop("Levels mismatch between responses in test and categories in training")
+  }
+  if (any(is.na(test[[group]]))) {
+    stop("Groups mismatch between training and test")
+  }
+
+  test_counts <- test %>%
+    group_by_(group, cue, response) %>%
+    tally() %>%
+    spread_(key=response, value='n', fill=0) %>%
+    ungroup()
+
+  return(test_counts)
+}
+
 # Support functions for conjugate belief updating
 
 #' Convert data to stan input for conjugate prior inference
@@ -33,27 +62,8 @@ NULL
 prepare_data_conj_infer_prior <- function(training, test,
                                           cue, category, response, group) {
 
-  training[[category]] <- training[[category]] %>% as.factor() %>% droplevels()
-  training[[group]] <- training[[group]] %>% as.factor() %>% droplevels()
-
-  cat_levels <- training[[category]] %>% levels()
-  subj_levels <- training[[group]] %>% levels()
-
-  test[[response]] <- test[[response]] %>% factor(levels=cat_levels)
-  test[[group]] <- test[[group]] %>% factor(levels=subj_levels)
-
-  if (any(is.na(test[[response]]))) {
-    stop("Levels mismatch between responses in test and categories in training")
-  }
-  if (any(is.na(test[[group]]))) {
-    stop("Groups mismatch between training and test")
-  }
-
-  test_counts <- test %>%
-    group_by_(group, cue, response) %>%
-    tally() %>%
-    spread_(key=response, value='n', fill=0) %>%
-    ungroup()
+  training <- check_training_data(training, category, group)
+  test_counts <- test_counts(training, test, cue, category, response, group)
 
   within(list(), {
     x <- training[[cue]]
@@ -68,11 +78,54 @@ prepare_data_conj_infer_prior <- function(training, test,
     y_test <- as.numeric(test_counts[[group]])
     z_test_counts <-
       test_counts %>%
-      select_(.dots=cat_levels) %>%
+      select_(.dots=levels(training[[category]])) %>%
       as.matrix()
 
     n_test <- length(x_test)
   })
+}
+
+## generate category-by-subject matrix of sufficient stats
+training_ss_matrix <- function(training, groupings, cue, ...) {
+  training_ss <-
+    training %>%
+    group_by_(.dots=groupings) %>%
+    summarise_each_(funs=funs(...), cue)
+
+  stats <- names(list(...))
+
+  map(stats, ~ reshape2::acast(training_ss, as.list(groupings), value.var=.x)) %>%
+    set_names(stats)
+}
+
+#' @export
+prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
+                                                     category, response, group) {
+
+  training <- check_training_data(training, category, group)
+  test_counts <- test_counts(training, test, cue, category, response, group)
+
+  categories <- training[[category]] %>% levels()
+
+  ## need category-by-subject/group matrices of sufficient stats
+  training %>% 
+    training_ss_matrix(list(category, group), cue,
+                       xbar = mean, n = length, xsd = sd) %>%
+    within({
+      m <- dim(xbar)[1]
+      l <- dim(xbar)[2]
+      
+      x_test <- test_counts[[cue]]
+      y_test <- as.numeric(test_counts[[group]])
+      z_test_counts <-
+        test_counts %>%
+        select_(.dots=levels(training[[category]])) %>%
+        as.matrix()
+
+      n_test <- length(x_test)
+    })
+    
+  
 }
 
 
