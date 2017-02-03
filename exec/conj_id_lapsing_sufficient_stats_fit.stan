@@ -17,9 +17,9 @@ data {
   int m;                        // number of categories
   int l;                        // number of subjects
 
-  int n[m,l];                   // number of training observations
-  real xbar[m,l];               // mean of training observations
-  real xsd[m,l];                // sample standard deviation of training obs
+  matrix[m,l] n;                // number of training observations
+  matrix[m,l] xbar;             // mean of training observations
+  matrix[m,l] xsd;              // sample standard deviation of training obs
 
   int n_test;                   // number of test trials
   real x_test[n_test];          // locations of test trials
@@ -29,12 +29,8 @@ data {
 
 transformed data {
   real n_each;
-  real ss[m,l];                 // sum of squares
-  for (i in 1:m) {
-    for (j in 1:l) {
-      ss[i,j] = (n[i,j] - 1) * xsd[i,j];
-    }
-  }
+  matrix[m,l] ss;
+  ss = (n - 1) .* xsd;
 
   n_each = n[1,1];
 
