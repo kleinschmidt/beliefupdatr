@@ -131,3 +131,57 @@ print(fit, digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
 The first thing to look for here is the `Rhat` statistic.  This is a measure of how well your chains have _mixed_, which is a way of approximating how successful your sampler was.  The idea is that if your chains are sampling from the actual posterior, then they'll mix together well.  Thus, if they _don't_ mix well, you know that something is wrong.  Of course, just because they mix well doesn't necessarily mean everything is hunky-dory, but it's a very important check.
 
 The next thing to look at is the parameter values themselves.  Are the of the right orders of magnitude?  Are the values actually reasonable?  Can you interpret them?
+
+
+
+# Inferring prior with incremental updating
+
+The model above assumes that _all training data_ has been encountered before any
+of the test data, and it ignores any incrementality in how listeners' behavior
+changes as they update their beliefs.  Can we capture belief updating behavior
+under the assumption that listeners incrementally update their beliefs, and what
+to the inferred prior beliefs look like?
+
+```{r prepare-data-inc}
+
+# start w/ four blocks
+d_stan_inc_4 <-
+  d %>%
+  group_by(bvotCond) %>%
+  filter(subject == first(subject)) %>%
+  beliefupdatr::prepare_data_incremental_suff_stats(test=d,
+                                                    cue = 'vot',
+                                                    category = 'trueCat',
+                                                    response = 'respCat',
+                                                    group = 'bvotCond',
+                                                    n_blocks = 4) %T>%
+  str()
+
+```
+
+We have to format the data in a slightly different way here.  First, instead of
+representing the training data in terms of raw observations, we're representing
+it in terms of _sufficient statistics_: count, mean, and standard deviation.
+The Stan code for the model above converts the raw observations into this
+format, but we gain more flexibility by doing it ourselves outside of Stan in
+this case.
+
+Second, we're making a simplifying assumption that of the _sufficient
+statistics_, only the count changes over blocks.  This is reasonable when
+modeling aggregate data because each subject gets a random trial order, so on
+average the statistics of each category will mirror the true statistics within
+each block.  Specifically, we model each blocks' test observations based on the
+number of tokens from each category a subject has seen, on average, up to
+halfway through that block.  This is a compromise between assuming that no
+updating happens throughout the block (as far as the test trials are concerned),
+and that the responses reflect the updated beliefs at the _end_ of the block.
+
+```{r fit-inc}
+
+fit_inc_4 <- rstan::stan(file = model_filename("conj_id_lapsing_sufficient_stats_fit.stan"),
+                         data = d_stan_inc_4,
+                         iter = 1000, chains = 4)
+
+print(fit_inc_4, digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
+
+```
