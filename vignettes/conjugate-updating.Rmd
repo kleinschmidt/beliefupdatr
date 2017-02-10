@@ -13,7 +13,8 @@ This package includes a Stan model for inferring listeners prior beliefs, based 
 
 ```{r preamble}
 
-library(dplyr)
+library(tidyverse)
+library(magrittr)
 library(beliefupdatr)
 
 ## devtools::install_github('kleinschmidt/phonetic-sup-unsup')
@@ -180,8 +181,28 @@ and that the responses reflect the updated beliefs at the _end_ of the block.
 
 fit_inc_4 <- rstan::stan(file = model_filename("conj_id_lapsing_sufficient_stats_fit.stan"),
                          data = d_stan_inc_4,
-                         iter = 1000, chains = 4)
+                         iter = 1000, chains = 4, init=0)
 
 print(fit_inc_4, digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
+
+```
+
+```{r fit-inc-10}
+
+fit_inc_10 <-
+  d %>%
+  group_by(bvotCond) %>%
+  filter(subject == first(subject)) %>%
+  beliefupdatr::prepare_data_incremental_suff_stats(test=d,
+                                                    cue = 'vot',
+                                                    category = 'trueCat',
+                                                    response = 'respCat',
+                                                    group = 'bvotCond',
+                                                    n_blocks = 10) %>%
+  rstan::stan(file = model_filename("conj_id_lapsing_sufficient_stats_fit.stan"),
+              data = .,
+              iter = 1000, chains = 4, init = 0) %T>%
+  print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
+  
 
 ```
