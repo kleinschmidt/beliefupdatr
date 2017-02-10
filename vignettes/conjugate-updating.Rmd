@@ -104,7 +104,8 @@ beliefupdatr::model_filename('conj_id_lapsing_fit.stan')
 This is the file that you'd normally pass to the `stan` function, but you can skip that using the `compile_stan` helper:
 
 ```{r compile}
-mod <- beliefupdatr::compile_stan('conj_id_lapsing_fit.stan')
+mod <- beliefupdatr::model_filename('conj_id_lapsing_fit.stan') %>%
+  rstan::stan_model()
 ```
 
 A few tips for speeding things up: if you have multiple cores and enough memory, you can run the chains in parallel by setting
@@ -120,7 +121,7 @@ Then Stan will up to four chains in parallel.  Note, though, that if you only ha
 Once you've compiled the model, you can fit it with the usual `rstan::stan` call.
 
 ```{r fit-model}
-fit <- rstan::stan(fit=mod, data=d_stan_little, chains=4, iter=1000)
+fit <- rstan::sampling(mod, data=d_stan_little, chains=4, iter=1000)
 ```
 
 If all goes well, that shouldn't take too long.  Once you've fit the model, you can eyeball the inferred prior values with
@@ -179,11 +180,13 @@ and that the responses reflect the updated beliefs at the _end_ of the block.
 
 ```{r fit-inc}
 
-fit_inc_4 <- rstan::stan(file = model_filename("conj_id_lapsing_sufficient_stats_fit.stan"),
-                         data = d_stan_inc_4,
-                         iter = 1000, chains = 4, init=0)
+mod_inc <- model_filename("conj_id_lapsing_sufficient_stats_fit.stan") %>%
+  rstan::stan_model() 
 
-print(fit_inc_4, digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
+fit_inc_4 <- rstan::sampling(mod_inc,
+                             data = d_stan_inc_4,
+                             iter = 1000, chains = 4, init=0) %T>%
+  print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
 
 ```
 
@@ -199,9 +202,9 @@ fit_inc_10 <-
                                                     response = 'respCat',
                                                     group = 'bvotCond',
                                                     n_blocks = 10) %>%
-  rstan::stan(file = model_filename("conj_id_lapsing_sufficient_stats_fit.stan"),
-              data = .,
-              iter = 1000, chains = 4, init = 0) %T>%
+  rstan::sampling(mod_inc,
+                  data = .,
+                  iter = 1000, chains = 4, init = 0) %T>%
   print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
   
 
