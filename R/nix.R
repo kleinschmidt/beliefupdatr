@@ -1,5 +1,4 @@
-#' @import assertthat
-#' @import purrr
+#' @import assertthat tidyverse
 #' @importFrom stats dt var
 NULL
 

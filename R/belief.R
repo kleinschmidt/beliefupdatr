@@ -1,4 +1,4 @@
-#' @import assertthat purrr
+#' @import assertthat tidyverse
 #' @importFrom utils tail
 NULL
 

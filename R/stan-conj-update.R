@@ -1,4 +1,4 @@
-#' @import dplyr purrr tidyr
+#' @import tidyverse
 #' @importFrom reshape2 melt
 NULL
 
