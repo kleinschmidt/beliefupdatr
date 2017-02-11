@@ -41,4 +41,3 @@ belief_update_batch(d, 'x', 'c', 'trial', seq(10, 100, by=10),
 \code{\link{belief_update}} for fully incremental,
   observation-by-observation belief updating.
 }
-

@@ -14,4 +14,3 @@ The terms of \eqn{p(\mu, \sigma^2 | \mu_0, \sigma^2_0, \nu, \kappa)} that
 don't involve \eqn{\mu} or \eqn{\sigma^2}.  Useful in calculating the
 marginal likelihood of data, where the mean and variance are integrated out.
 }
-

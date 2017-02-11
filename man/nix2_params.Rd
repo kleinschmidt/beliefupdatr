@@ -18,4 +18,3 @@ nix2_params(mu, sigma2, kappa, nu)
 \description{
 Wrap parameters into a list for updating etc.
 }
-

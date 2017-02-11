@@ -40,4 +40,3 @@ aggregate data it makes sense to use the aggregate statistics.
 \details{
 For now, the total number of trials in training and test need to be equal.
 }
-

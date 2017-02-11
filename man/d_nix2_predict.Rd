@@ -18,4 +18,3 @@ This is the probability distribution of observations drawn from a normal
 distribution whose mean and variance follow the Normal-Chi^-2 distribution
 with the specified parameters. It works out to be a Student's t distribution.
 }
-

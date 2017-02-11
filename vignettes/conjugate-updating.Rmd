@@ -121,7 +121,7 @@ Then Stan will up to four chains in parallel.  Note, though, that if you only ha
 Once you've compiled the model, you can fit it with the usual `rstan::stan` call.
 
 ```{r fit-model}
-fit <- rstan::sampling(mod, data=d_stan_little, chains=4, iter=1000)
+fit <- rstan::sampling(mod, data=d_stan_little, chains=4, iter=500)
 ```
 
 If all goes well, that shouldn't take too long.  Once you've fit the model, you can eyeball the inferred prior values with
@@ -178,7 +178,7 @@ halfway through that block.  This is a compromise between assuming that no
 updating happens throughout the block (as far as the test trials are concerned),
 and that the responses reflect the updated beliefs at the _end_ of the block.
 
-```{r fit-inc}
+```{r fit-inc, eval=FALSE}
 
 mod_inc <- model_filename("conj_id_lapsing_sufficient_stats_fit.stan") %>%
   rstan::stan_model() 
@@ -190,7 +190,7 @@ fit_inc_4 <- rstan::sampling(mod_inc,
 
 ```
 
-```{r fit-inc-10}
+```{r fit-inc-10, eval=FALSE}
 
 fit_inc_10 <-
   d %>%

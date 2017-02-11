@@ -29,4 +29,3 @@ This uses the parametrization from
 \href{https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf}{Murphy (2008;
 University of British Columbia)}.
 }
-

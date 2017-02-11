@@ -9,4 +9,3 @@ list_models()
 \description{
 These can be passed to model_filename or compile_stan
 }
-

@@ -31,4 +31,3 @@ Like \code{\link{prepare_data_conj_infer_prior}}, but for sufficient
 statistics for training data (count, mean, and sample standard deviation)
 instead of raw training observations.
 }
-

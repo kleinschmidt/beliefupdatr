@@ -22,4 +22,3 @@ a data_frame, with one row per sample and columns for
 \description{
 Extract sampled prior beliefs from fitted model to a data_frame
 }
-
