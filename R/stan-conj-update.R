@@ -22,10 +22,10 @@ test_counts <- function(training, test, cue, category, response, group) {
   }
 
   test_counts <- test %>%
-    dplyr::group_by_(group, cue, response) %>%
-    dplyr::tally() %>%
-    tidyr::spread_(key=response, value='n', fill=0) %>%
-    dplyr::ungroup()
+    group_by_(group, cue, response) %>%
+    tally() %>%
+    spread_(key=response, value='n', fill=0) %>%
+    ungroup()
 
   return(test_counts)
 }
@@ -77,7 +77,7 @@ prepare_data_conj_infer_prior <- function(training, test,
     y_test <- as.numeric(test_counts[[group]])
     z_test_counts <-
       test_counts %>%
-      dplyr::select_(.dots=levels(training[[category]])) %>%
+      select_(.dots=levels(training[[category]])) %>%
       as.matrix()
 
     n_test <- length(x_test)
@@ -88,8 +88,8 @@ prepare_data_conj_infer_prior <- function(training, test,
 training_ss_matrix <- function(training, groupings, cue, ...) {
   training_ss <-
     training %>%
-    dplyr::group_by_(.dots=groupings) %>%
-    dplyr::summarise_each_(funs=funs(...), cue)
+    group_by_(.dots=groupings) %>%
+    summarise_each_(funs=funs(...), cue)
 
   stats <- names(list(...))
 
@@ -128,7 +128,7 @@ prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
       y_test <- as.numeric(test_counts[[group]])
       z_test_counts <-
         test_counts %>%
-        dplyr::select_(.dots=levels(training[[category]])) %>%
+        select_(.dots=levels(training[[category]])) %>%
         as.matrix()
 
       n_test <- length(x_test)
@@ -178,10 +178,10 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
   # the training data means that you can do group_num + 
   test_counts_blocks <-
     test %>%
-    dplyr::mutate(block = ntile(trial, n_blocks)) %>%
-    dplyr::group_by(block) %>%
-    tidyr::nest() %>%
-    dplyr::mutate(counts=map(data, ~ test_counts(training, ., cue, category, response,
+    mutate(block = ntile(trial, n_blocks)) %>%
+    group_by(block) %>%
+    nest() %>%
+    mutate(counts=map(data, ~ test_counts(training, ., cue, category, response,
                                                  group))) %>%
     unnest(counts) %>%
     mutate(group_block = as.numeric(bvotCond) +

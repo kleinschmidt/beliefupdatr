@@ -78,13 +78,13 @@ belief_update_batch <- function(d, cue, categories, trials, at, beliefs) {
 
   # cut, summarise by category, and update
   d %>%
-    dplyr::group_by_(.dots=grouping) %>%
-    tidyr::nest() %>%
-    dplyr::mutate(beliefs = map(data, ~ split(.[[cue]], .[[categories]]) %>%
-                                        map(summary_stats)) %>%
-                    accumulate(update_summary_stats, .init=beliefs) %>%
-                    tail(length(data))) %>%
-    dplyr::select(-data)
+    group_by_(.dots=grouping) %>%
+    nest() %>%
+    mutate(beliefs = map(data, ~ split(.[[cue]], .[[categories]]) %>%
+                                 map(summary_stats)) %>%
+             accumulate(update_summary_stats, .init=beliefs) %>%
+             tail(length(data))) %>%
+    select(-data)
 }
 
 summary_stats <- function(x) within(list(), {
