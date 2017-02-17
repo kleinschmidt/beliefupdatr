@@ -1,4 +1,4 @@
-library(dplyr)
+library(dplyr, warn.conflicts=FALSE)
 library(purrr, warn.conflicts=FALSE)
 
 context("Belief updating")

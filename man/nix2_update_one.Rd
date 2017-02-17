@@ -24,4 +24,3 @@ University of British Columbia)}.
 This is specialized for a single observation, and about 25% faster than
 \code{nix2_update}. Use, for instance, in \code{reduce} or \code{accumulate}.
 }
-

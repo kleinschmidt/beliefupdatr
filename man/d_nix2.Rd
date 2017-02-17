@@ -20,4 +20,3 @@ The (log-)probability density for each row of \code{mv}.
 \description{
 Probability density function for NIX2 distribution
 }
-

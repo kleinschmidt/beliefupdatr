@@ -1,4 +1,6 @@
 #' @import assertthat purrr
+#' @importFrom dplyr %>% mutate summarise summarise_each summarise_each_ group_by group_by_ ungroup tally select select_
+#' @importFrom tidyr spread spread_ gather gather_ nest unnest
 #' @importFrom utils tail
 NULL
 
@@ -26,9 +28,9 @@ NULL
 #'
 #' @export
 belief_update <- function(d, cue, categories, beliefs) {
-  d$beliefs <- purrr::accumulate(purrr::transpose(d[c(cue, categories)]),
-                                 update_cue_category,
-                                 .init = beliefs) %>%
+  d$beliefs <- accumulate(transpose(d[c(cue, categories)]),
+                          update_cue_category,
+                          .init = beliefs) %>%
     tail(nrow(d))
   d
 }
@@ -76,13 +78,13 @@ belief_update_batch <- function(d, cue, categories, trials, at, beliefs) {
 
   # cut, summarise by category, and update
   d %>%
-    dplyr::group_by_(.dots=grouping) %>%
-    tidyr::nest() %>%
-    dplyr::mutate(beliefs = map(data, ~ split(.[[cue]], .[[categories]]) %>%
-                                map(summary_stats)) %>%
+    group_by_(.dots=grouping) %>%
+    nest() %>%
+    mutate(beliefs = map(data, ~ split(.[[cue]], .[[categories]]) %>%
+                                 map(summary_stats)) %>%
              accumulate(update_summary_stats, .init=beliefs) %>%
              tail(length(data))) %>%
-    dplyr::select(-data)
+    select(-data)
 }
 
 summary_stats <- function(x) within(list(), {
@@ -95,7 +97,7 @@ summary_stats <- function(x) within(list(), {
 # update and corresponding category summary statistics respectively
 update_summary_stats <- function(params, sumstats) {
   map2(params, sumstats[names(params)],
-       ~ do.call(nix2_update, c(list(p=.x), .y)))
+       ~ lift(nix2_update)(update_list(.y, p=.x)))
 }
 
 # label intervals with elements from 'at'

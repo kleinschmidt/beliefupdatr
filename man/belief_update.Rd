@@ -35,4 +35,3 @@ belief_update(d, 'x', 'c',
 \code{\link{belief_update_batch}} for batch belief updating, which
   is more efficient.
 }
-

@@ -25,4 +25,3 @@ a data_frame, with one row per sample and columns for
 \description{
 Extract sampled updated beliefs from fitted model to data_frame
 }
-

@@ -21,4 +21,3 @@ A length(x)-by-category matrix of posterior probabilities
 This computes the posterior probability of data under different Normal-Chi^-2
 distributions.
 }
-

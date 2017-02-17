@@ -14,4 +14,3 @@ Code for stan models is stored in the exec/ subdirectory of wherever
 this package is installed. This is a convenience shortcut to get fully
 specified paths to a model
 }
-

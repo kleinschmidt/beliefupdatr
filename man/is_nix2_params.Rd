@@ -17,4 +17,3 @@ freedom).
 \details{
 Kappa, nu, and sigma2 must be non-negative.
 }
-

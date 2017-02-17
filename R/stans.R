@@ -19,8 +19,8 @@ model_filename <- function(model_name) {
 #' @param ... Additional arguments are passed to \code{rstan::stan}
 #' 
 #' @export
-compile_stan <- function(model_name, ...) {
-  rstan::stan(model_filename(model_name), chains=0, ...)
+compile_stan <- function(model_name) {
+  rstan::stan_model(model_filename(model_name))
 }
 
 #' List the included models

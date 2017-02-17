@@ -19,4 +19,3 @@ An n x 2 matrix with sampled means in the first column and variances
 This first draws the variance from a (scaled) inverse chi squared
 distribution, and then the mean from a normal distribution.
 }
-

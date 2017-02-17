@@ -31,4 +31,3 @@ Thus, the density function f_Y(y) is obtained from f_X = dchisq via
 f_Y(y) = d/dy g^-1(y) * f_X(g^-1(y))
          = y^-2 * nu*sigma^2 * dchisq(nu*sigma^2/y, nu)
 }
-
