@@ -1,4 +1,4 @@
-#' @import assertthat tidyverse
+#' @import assertthat
 #' @importFrom stats dt var
 NULL
 
@@ -143,7 +143,7 @@ d_nix2_predict <- function(x, p, log=FALSE) {
 #' @export
 nix2_classify <- function(x, ps, category=1:length(ps)) {
   map(ps, d_nix2_predict, x=x, log=FALSE) %>%
-    do.call(cbind, .) %>%
+    lift(cbind)() %>%
     apply(1, function(x) x / sum(x)) %>%
     t() %>%
     `[`(, category)
