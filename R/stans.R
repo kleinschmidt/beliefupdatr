@@ -1,3 +1,8 @@
+#' @useDynLib beliefupdatr, .registration = TRUE
+#' @import Rcpp
+#' @import methods
+NULL
+
 #' Get a model's full path
 #'
 #' Code for stan models is stored in the exec/ subdirectory of wherever

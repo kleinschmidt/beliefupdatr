@@ -5,7 +5,9 @@ Authors@R: person("Dave", "Kleinschmidt", email = "dave.f.kleinschmidt@gmail.com
 Description: Modeling phonetic adaptation as belief updating requires some
     distributions and utility functions. Here they are.
 Depends:
-    R (>= 3.2.3)
+    R (>= 3.2.3),
+    Rcpp (>= 0.12.9.1),
+    methods (>= 3.3.2)
 Imports:
     purrr,
     assertthat,
@@ -16,10 +18,18 @@ Imports:
     lazyeval,
     dplyr,
     tidyr,
-    reshape2
+    reshape2,
+    rstan (>= 2.14.1),
+    rstantools (>= 1.1.0)
 Remotes:
     kleinschmidt/daver,
     kleinschmidt/phonetic-sup-unsup
+LinkingTo:
+    StanHeaders (>= 2.14.0.1),
+    rstan (>= 2.14.1),
+    BH (>= 1.62.0.1),
+    Rcpp (>= 0.12.9.1),
+    RcppEigen (>= 0.3.2.9.0)
 License: MIT
 LazyData: true
 RoxygenNote: 6.0.1
