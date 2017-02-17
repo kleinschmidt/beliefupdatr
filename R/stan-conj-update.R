@@ -1,3 +1,4 @@
+#' @importFrom dplyr inner_join
 #' @importFrom reshape2 melt
 NULL
 
