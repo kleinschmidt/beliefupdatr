@@ -89,36 +89,31 @@ str(d_stan_little)
 
 ## Getting ready
 
-To fit a Stan model, there are two steps. First, Stan translates the `.stan` file into C++ code, and compiles it.  Then, it draws samples from the posterior distribution of the parameters using this compiled code.  This package provides a few helpers for these steps.  First, you can list the Stan source files included with this package with
+You can list the stan models included with
 
-```{r list-models}
+```{r}
 beliefupdatr::list_models()
 ```
 
-(There's just one at the moment).  Assuming that you've installed this package (with `devtools::install` or `devtools::install_github`), you can get the absolute path to this file with
-
-```{r model-path}
-beliefupdatr::model_filename('conj_id_lapsing_fit.stan')
-```
-
-This is the file that you'd normally pass to the `stan` function, but you can skip that using the `compile_stan` helper:
+Stan models are pre-compiled when the package is installed.  If you want to access them directly, the compiled `stanmodel` objects are stored in the list:
 
 ```{r compile}
-mod <- beliefupdatr::model_filename('conj_id_lapsing_fit.stan') %>%
-  rstan::stan_model()
+mod <- beliefupdatr:::stanmodels[['conj_id_lapsing_fit']]
 ```
+
+These include the original Stan code, the translated C++ code, and the compiled objects.
 
 A few tips for speeding things up: if you have multiple cores and enough memory, you can run the chains in parallel by setting
 
-```{r cores, eval=FALSE}
-options(mc.cores = 4)
+```{r cores}
+options(mc.cores = parallel::detectCores())
 ```
 
-Then Stan will up to four chains in parallel.  Note, though, that if you only have four cores this can tie up your laptop pretty well, so I typically use one less than the number of cores I really have.
+Then Stan will use however many cores you have, and can run up to that many chains in parallel.  Note, though, that if you only have four cores this can tie up your laptop pretty well, so I typically use one less than the number of cores I really have (e.g., `parallel::detectCores()-1`).
 
 ## Actually fitting the model
 
-Once you've compiled the model, you can fit it with the usual `rstan::stan` call.
+Once you've compiled the model, you can sample from it with `rstan::sampling` call.
 
 ```{r fit-model}
 fit <- rstan::sampling(mod, data=d_stan_little, chains=4, iter=500)
@@ -178,19 +173,18 @@ halfway through that block.  This is a compromise between assuming that no
 updating happens throughout the block (as far as the test trials are concerned),
 and that the responses reflect the updated beliefs at the _end_ of the block.
 
-```{r fit-inc, eval=FALSE}
+```{r fit-inc}
 
-mod_inc <- model_filename("conj_id_lapsing_sufficient_stats_fit.stan") %>%
-  rstan::stan_model() 
+mod_inc <- beliefupdatr:::stanmodels[['conj_id_lapsing_sufficient_stats_fit']]
 
 fit_inc_4 <- rstan::sampling(mod_inc,
                              data = d_stan_inc_4,
-                             iter = 1000, chains = 4, init=0) %T>%
+                             iter = 500, chains = 4, init=0) %T>%
   print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
 
 ```
 
-```{r fit-inc-10, eval=FALSE}
+```{r fit-inc-10}
 
 fit_inc_10 <-
   d %>%
@@ -204,7 +198,7 @@ fit_inc_10 <-
                                                     n_blocks = 10) %>%
   rstan::sampling(mod_inc,
                   data = .,
-                  iter = 1000, chains = 4, init = 0) %T>%
+                  iter = 500, chains = 4, init = 0) %T>%
   print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
   
 
