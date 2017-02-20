@@ -105,7 +105,7 @@ These include the original Stan code, the translated C++ code, and the compiled 
 
 A few tips for speeding things up: if you have multiple cores and enough memory, you can run the chains in parallel by setting
 
-```{r cores}
+```{r cores, eval=FALSE}
 options(mc.cores = parallel::detectCores())
 ```
 
