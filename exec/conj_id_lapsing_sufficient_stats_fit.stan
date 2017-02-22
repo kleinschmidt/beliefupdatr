@@ -15,7 +15,7 @@
 
 data {
   int m;                        // number of categories
-  int l;                        // number of subjects
+  int l;                        // number of groups (conditions or subjects)
 
   matrix[m,l] n;                // number of training observations
   matrix[m,l] xbar;             // mean of training observations
@@ -23,7 +23,7 @@ data {
 
   int n_test;                   // number of test trials
   real x_test[n_test];          // locations of test trials
-  int y_test[n_test];           // subject labels for test trials
+  int y_test[n_test];           // group labels for test trials
   int z_test_counts[n_test,m];  // responses for test trials
 }
 
@@ -32,12 +32,12 @@ transformed data {
   matrix[m,l] ss;
   ss = (n - 1) .* xsd;
 
-  n_each = n[1,1];
+  n_each = max(n);
 
 }
 
 parameters {
-  // these are all shared across subjects (same prior beliefs):
+  // these are all shared across groups (same prior beliefs):
   real<lower=0> kappa_0;        // prior pseudocount for mean
   real<lower=0> nu_0;           // prior pseudocount for sd
   real mu_0[m];                 // prior expected mean
@@ -46,7 +46,7 @@ parameters {
 }
 
 transformed parameters {
-  // updated beliefs depend on input/subject
+  // updated beliefs depend on input/group
   real mu_n[m,l];                 // updated expected mean
   real<lower=0> kappa_n[m,l];     // updated mean pseudocount
   real<lower=0> sigma_n[m,l];     // updated expected sd
@@ -58,30 +58,30 @@ transformed parameters {
   // update NIX2 parameters according to conjuate updating rules are taken from
   // Murphy (2007)
   for (cat in 1:m) {
-    for (subj in 1:l) {
-      kappa_n[cat,subj] = kappa_0 + n[cat,subj];
-      nu_n[cat,subj] = nu_0 + n[cat,subj];
-      mu_n[cat,subj] = (mu_0[cat] * kappa_0 + xbar[cat,subj] * n[cat,subj]) / kappa_n[cat,subj];
-      sigma_n[cat,subj] = sqrt((nu_0*sigma_0[cat]^2 +
-                                 ss[cat,subj] +
-                                 (n[cat,subj]*kappa_0)/(kappa_n[cat,subj]) *
-                                   (mu_0[cat] - xbar[cat,subj])^2
+    for (group in 1:l) {
+      kappa_n[cat,group] = kappa_0 + n[cat,group];
+      nu_n[cat,group] = nu_0 + n[cat,group];
+      mu_n[cat,group] = (mu_0[cat] * kappa_0 + xbar[cat,group] * n[cat,group]) / kappa_n[cat,group];
+      sigma_n[cat,group] = sqrt((nu_0*sigma_0[cat]^2 +
+                                 ss[cat,group] +
+                                 (n[cat,group]*kappa_0)/(kappa_n[cat,group]) *
+                                   (mu_0[cat] - xbar[cat,group])^2
                                  ) /
-                                nu_n[cat,subj]);
-      t_scale[cat,subj] = sigma_n[cat,subj] * sqrt((kappa_n[cat,subj] + 1) / kappa_n[cat,subj]);
+                                nu_n[cat,group]);
+      t_scale[cat,group] = sigma_n[cat,group] * sqrt((kappa_n[cat,group] + 1) / kappa_n[cat,group]);
     }
   }
 
   // compute category probabilities for each of the test stimuli
   for (j in 1:n_test) {
-    int subj;
-    subj = y_test[j];
+    int group;
+    group = y_test[j];
     // calculate un-normalized log prob for each category
     for (cat in 1:m) {
       log_p_test_conj[j,cat] = student_t_lpdf(x_test[j] |
-                                              nu_n[cat,subj],
-                                              mu_n[cat,subj],
-                                              t_scale[cat,subj]);
+                                              nu_n[cat,group],
+                                              mu_n[cat,group],
+                                              t_scale[cat,group]);
     }
     // normalize and store actual probs in simplex
     p_test_conj[j] = exp(log_p_test_conj[j] - log_sum_exp(log_p_test_conj[j]));
