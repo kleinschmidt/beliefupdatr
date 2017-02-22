@@ -55,7 +55,7 @@ test_counts <- function(training, test, cue, category, response, group) {
 
   test[[response]] <- test[[response]] %>% factor(levels=cat_levels)
   test[[group]] <- test[[group]] %>% factor(levels=subj_levels)
-  
+
   if (any(is.na(test[[response]]))) {
     stop("Levels mismatch between responses in test and categories in training")
   }
@@ -144,11 +144,11 @@ training_ss_matrix <- function(training, groupings, cue, ...) {
 #' Like \code{\link{prepare_data_conj_infer_prior}}, but for sufficient
 #' statistics for training data (count, mean, and sample standard deviation)
 #' instead of raw training observations.
-#' 
+#'
 #' @inheritParams prepare_data_conj_infer_prior
 #'
 #' @return A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
-#' 
+#'
 #' @export
 prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
                                                      category, response, group) {
@@ -159,13 +159,13 @@ prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
   categories <- training[[category]] %>% levels()
 
   ## need category-by-subject/group matrices of sufficient stats
-  training %>% 
+  training %>%
     training_ss_matrix(list(category, group), cue,
                        xbar = mean, n = length, xsd = sd) %>%
     within({
       m <- dim(xbar)[1]
       l <- dim(xbar)[2]
-      
+
       x_test <- test_counts[[cue]]
       y_test <- as.numeric(test_counts[[group]])
       z_test_counts <-
@@ -175,8 +175,8 @@ prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
 
       n_test <- length(x_test)
     })
-    
-  
+
+
 }
 
 
@@ -205,9 +205,9 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
 
   # calculate overall summary statistics
   training <- check_training_data(training, category, group)
-  ss <- training_ss_matrix(training, list(category, group), cue, 
+  ss <- training_ss_matrix(training, list(category, group), cue,
                            xbar = mean, n = length, xsd = sd)
-  
+
   # expand sufficient stats over blocks (just by adjusting the counts, as if
   # they've seen up to half the current block's worth of training data)
   ss_blocks <-
@@ -217,14 +217,14 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
 
   # generate test counts broken out by block
   # the trick is to line up the group numbers. but the way they're generated for
-  # the training data means that you can do group_num + 
+  # the training data means that you can do group_num +
   test_counts_blocks <-
     test %>%
     mutate(block = ntile(trial, n_blocks)) %>%
     group_by(block) %>%
     nest() %>%
-    mutate(counts=map(data, ~ test_counts(training, ., cue, category, response,
-                                                 group))) %>%
+    mutate(counts=map(data,
+                      ~ test_counts(training, ., cue, category, response, group))) %>%
     unnest(counts) %>%
     mutate(group_block = as.numeric(bvotCond) +
              (block-1) * length(levels(bvotCond)))
@@ -232,7 +232,7 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
   within(ss_blocks, {
     m <- dim(xbar)[1]
     l <- dim(xbar)[2]
-    
+
     x_test <- test_counts_blocks[[cue]]
     y_test <- test_counts_blocks[['group_block']]
     z_test_counts <-
@@ -271,7 +271,7 @@ cond_from_idx <- function(i, lev) factor(lev[i], levels = lev)
 #' @return a data_frame, with one row per sample and columns for
 #'   \code{iterations} (sample number), \code{category}, \code{mu_0},
 #'   \code{sigma_0}, \code{kappa_0}, and \code{nu_0}.
-#' 
+#'
 #' @export
 extract_prior_samples <- function(fitted, cat_levels,
                                   samples=rstan::extract(fitted)) {
@@ -297,7 +297,7 @@ extract_prior_samples <- function(fitted, cat_levels,
 #' @return a data_frame, with one row per sample and columns for
 #'   \code{iterations} (sample number), \code{category}, \code{group},
 #'   \code{mu_n}, \code{sigma_n}, \code{kappa_n}, and \code{nu_n}.
-#' 
+#'
 #' @export
 extract_updated_samples <- function(fitted, cat_levels, group_levels,
                                     samples=rstan::extract(fitted)) {
@@ -319,7 +319,7 @@ extract_updated_samples <- function(fitted, cat_levels, group_levels,
 }
 
 updated_samples_predict_lhood <- function(updated_samples, x) {
-  
+
   y <- updated_samples %>%
     by_row(~ nix2_params(.$mu_n, .$sigma_n^2, .$kappa_n, .$nu_n) %>%
              d_nix2_predict(x=x, p=.) %>%

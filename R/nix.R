@@ -20,7 +20,7 @@ NULL
 #' @export
 nix2_update <- function(p=list(nu=0, kappa=0, mu=0, sigma2=0),
                         x=NA,
-                        n=length(x), 
+                        n=length(x),
                         xbar=mean(x),
                         ss=s2*(n-1),
                         s2=var(x)) {
@@ -63,7 +63,7 @@ nix2_update_one <- function(p=list(nu=0, kappa=0, mu=0, sigma2=0), x) {
     sigma2 <- (p$nu * p$sigma2 + p$kappa/kappa * (p$mu - x)^2) / nu
   })
 }
-                            
+
 
 #' Wrap parameters into a list for updating etc.
 #'
@@ -101,7 +101,7 @@ is_nix2_params <- function(p) {
   assert_that(p$sigma2 >= 0)
   TRUE
 }
-  
+
 assertthat::on_failure(is_nix2_params) <- function(call, env) {
   paste0(deparse(call$x), ' are not valid Normal-Chi^-2 parameters')
 }
@@ -166,7 +166,7 @@ nix2_classify <- function(x, ps, category=1:length(ps)) {
 #' @export
 nix2_marginal_lhood <- function(p,
                                 x=NA,
-                                n=length(x), 
+                                n=length(x),
                                 xbar=mean(x),
                                 ss=s2*(n-1),
                                 s2=var(x),
@@ -260,5 +260,5 @@ d_nix2 <- function(mv, p, log=FALSE) {
 
   if (log) log_d
   else exp(log_d)
-         
+
 }
