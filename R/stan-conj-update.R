@@ -2,6 +2,47 @@
 #' @importFrom reshape2 melt
 NULL
 
+#' Infer prior beliefs based on adaptation behavior
+#'
+#' This takes training and test data, the names of the columns, and (optionally)
+#' the number of blocks to split the trials into, and stan parameters, and uses
+#' stan to draw samples from the prior beliefs that match the behavior.
+#'
+#' @inheritParams prepare_data_incremental_suff_stats
+#' @param ... Additiona parameters are passed to \code{\link{rstan::sampling}}
+#'
+#' @return A \code{stanfit} object with the fitted stan model.
+#'
+#' @seealso \code{\link{extract_prior_samples}} to get a data frame of samples
+#'   from the prior belief parameters.
+#' @export
+infer_prior_beliefs <- function(training, test, cue,
+                                category, response, group,
+                                n_blocks, ...) {
+
+  if (missing(n_blocks)) {
+    dat <- prepare_data_conj_suff_stats_infer_prior(training,
+                                                    test,
+                                                    cue,
+                                                    category,
+                                                    response,
+                                                    group)
+  } else {
+    dat <- prepare_data_incremental_suff_stats(training,
+                                               test,
+                                               cue,
+                                               category,
+                                               response,
+                                               group,
+                                               n_blocks)
+  }
+
+  fit <- rstan::sampling(stanmodels[['conj_id_lapsing_sufficient_stats_fit']],
+                         data=dat, ...)
+
+}
+
+
 check_training_data <- function(training, category, group) {
   training[[category]] <- training[[category]] %>% as.factor() %>% droplevels()
   training[[group]] <- training[[group]] %>% as.factor() %>% droplevels()

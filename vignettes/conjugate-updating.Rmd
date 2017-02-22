@@ -22,6 +22,8 @@ library(supunsup)
 
 library(rstan)
 
+set.seed(1L)
+
 ```
 
 # Load and format data
@@ -113,10 +115,21 @@ Then Stan will use however many cores you have, and can run up to that many chai
 
 ## Actually fitting the model
 
-Once you've compiled the model, you can sample from it with `rstan::sampling` call.
+This package provides the function `infer_prior_beliefs` that wraps the process of converting data from a data frame into stan format, and running the stan model sampler.  It requires training data set (from which the sufficient stats of each exposure category are determined), a test data set (behavioral responses), and the names of the columns for the cue value, true category, subjects' response, and condition variable (group).
 
-```{r fit-model}
-fit <- rstan::sampling(mod, data=d_stan_little, chains=4, iter=500)
+```{r fit-model-again}
+
+fit <- d %>%
+  group_by(bvotCond) %>%
+  filter(subject == first(subject)) %>%
+  infer_prior_beliefs(training=.,
+                      test=d,
+                      cue='vot',
+                      category='trueCat',
+                      response='respCat',
+                      group='bvotCond',
+                      chains = 4, iter = 500)
+
 ```
 
 If all goes well, that shouldn't take too long.  Once you've fit the model, you can eyeball the inferred prior values with
@@ -130,31 +143,13 @@ The first thing to look for here is the `Rhat` statistic.  This is a measure of 
 The next thing to look at is the parameter values themselves.  Are the of the right orders of magnitude?  Are the values actually reasonable?  Can you interpret them?
 
 
-
 # Inferring prior with incremental updating
 
-The model above assumes that _all training data_ has been encountered before any
-of the test data, and it ignores any incrementality in how listeners' behavior
-changes as they update their beliefs.  Can we capture belief updating behavior
-under the assumption that listeners incrementally update their beliefs, and what
-to the inferred prior beliefs look like?
-
-```{r prepare-data-inc}
-
-# start w/ four blocks
-d_stan_inc_4 <-
-  d %>%
-  group_by(bvotCond) %>%
-  filter(subject == first(subject)) %>%
-  beliefupdatr::prepare_data_incremental_suff_stats(test=d,
-                                                    cue = 'vot',
-                                                    category = 'trueCat',
-                                                    response = 'respCat',
-                                                    group = 'bvotCond',
-                                                    n_blocks = 4) %T>%
-  str()
-
-```
+The basic model above assumes that _all training data_ has been encountered
+before any of the test data, and it ignores any incrementality in how listeners'
+behavior changes as they update their beliefs.  Can we capture belief updating
+behavior under the assumption that listeners incrementally update their beliefs,
+and what to the inferred prior beliefs look like?
 
 We have to format the data in a slightly different way here.  First, instead of
 representing the training data in terms of raw observations, we're representing
@@ -173,33 +168,24 @@ halfway through that block.  This is a compromise between assuming that no
 updating happens throughout the block (as far as the test trials are concerned),
 and that the responses reflect the updated beliefs at the _end_ of the block.
 
-```{r fit-inc}
-
-mod_inc <- beliefupdatr:::stanmodels[['conj_id_lapsing_sufficient_stats_fit']]
-
-fit_inc_4 <- rstan::sampling(mod_inc,
-                             data = d_stan_inc_4,
-                             iter = 500, chains = 4, init=0) %T>%
-  print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
-
-```
+This is all handled by the same wrapper function as before.  If you pass a value
+for the optional `n_blocks` argument, the incremental model will be used,
+assuming that many blocks:
 
 ```{r fit-inc-10}
 
-fit_inc_10 <-
+fit_inc <-
   d %>%
   group_by(bvotCond) %>%
   filter(subject == first(subject)) %>%
-  beliefupdatr::prepare_data_incremental_suff_stats(test=d,
-                                                    cue = 'vot',
-                                                    category = 'trueCat',
-                                                    response = 'respCat',
-                                                    group = 'bvotCond',
-                                                    n_blocks = 10) %>%
-  rstan::sampling(mod_inc,
-                  data = .,
-                  iter = 500, chains = 4, init = 0) %T>%
+  infer_prior_beliefs(training = ., test = d,
+                      cue = 'vot',
+                      category = 'trueCat',
+                      response = 'respCat',
+                      group = 'bvotCond',
+                      n_blocks = 10,    # discretize trials into 10 blocks
+                      iter = 500, chains = 4, init = 0) %T>%
   print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
-  
+
 
 ```
