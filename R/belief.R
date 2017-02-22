@@ -18,7 +18,7 @@ NULL
 #'
 #' @seealso \code{\link{belief_update_batch}} for batch belief updating, which
 #'   is more efficient.
-#' 
+#'
 #' @examples
 #' d <- data.frame(x = rnorm(100, 3),
 #'                 c = sample(c('a', 'b'), 100, replace=TRUE))
@@ -63,7 +63,7 @@ update_cue_category <- function(params, cue_category) {
 #' belief_update_batch(d, 'x', 'c', 'trial', seq(10, 100, by=10),
 #'                     list(a = nix2_params(0, 0, 10, 10),
 #'                          b = nix2_params(0, 0, 10, 10)))
-#' 
+#'
 #' @export
 belief_update_batch <- function(d, cue, categories, trials, at, beliefs) {
   assert_that(d %has_name% cue, d %has_name% categories, d %has_name% trials)

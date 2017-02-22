@@ -48,7 +48,7 @@ transformed data {
     ss[cat,subj] = ss[cat,subj] + delta * (x[j] - xbar[cat,subj]);
   }
 
-  n_each = n / (m*l);           /* avg. number of observations per category */
+  n_each = (1.0 * n) / (m*l);     /* avg. number of observations per category */
 }
 
 parameters {
