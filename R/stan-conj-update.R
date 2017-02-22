@@ -1,4 +1,5 @@
 #' @importFrom dplyr inner_join
+#' @importFrom abind abind
 #' @importFrom reshape2 melt
 NULL
 
@@ -27,6 +28,7 @@ infer_prior_beliefs <- function(training, test, cue,
                                                     category,
                                                     response,
                                                     group)
+    mod <- stanmodels[['conj_id_lapsing_sufficient_stats_fit']]
   } else {
     dat <- prepare_data_incremental_suff_stats(training,
                                                test,
@@ -35,10 +37,10 @@ infer_prior_beliefs <- function(training, test, cue,
                                                response,
                                                group,
                                                n_blocks)
+    mod <- stanmodels[['conj_id_lapsing_sufficient_stats_incremental_fit']]
   }
 
-  fit <- rstan::sampling(stanmodels[['conj_id_lapsing_sufficient_stats_fit']],
-                         data=dat, ...)
+  fit <- rstan::sampling(mod, data=dat, ...)
 
 }
 
@@ -213,7 +215,8 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
   ss_blocks <-
     map(seq_len(n_blocks), ~ update_list(ss, n = ~ n / n_blocks * (.x-0.5))) %>%
     transpose() %>%
-    map(lift(cbind))
+    map(lift(abind), along=3) %>%
+    map(aperm, c(3,1,2))
 
   # generate test counts broken out by block
   # the trick is to line up the group numbers. but the way they're generated for
@@ -225,16 +228,16 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
     nest() %>%
     mutate(counts=map(data,
                       ~ test_counts(training, ., cue, category, response, group))) %>%
-    unnest(counts) %>%
-    mutate(group_block = as.numeric(bvotCond) +
-             (block-1) * length(levels(bvotCond)))
+    unnest(counts)
 
   within(ss_blocks, {
-    m <- dim(xbar)[1]
-    l <- dim(xbar)[2]
+    k <- dim(xbar)[1]
+    m <- dim(xbar)[2]
+    l <- dim(xbar)[3]
 
     x_test <- test_counts_blocks[[cue]]
-    y_test <- test_counts_blocks[['group_block']]
+    y_test <- test_counts_blocks[[group]] %>% as.numeric()
+    block_test <- test_counts_blocks[['block']]
     z_test_counts <-
       test_counts_blocks %>%
       select_(.dots=levels(training[[category]])) %>%
