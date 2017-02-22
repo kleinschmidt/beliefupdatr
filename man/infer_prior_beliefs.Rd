@@ -25,7 +25,7 @@ category labels.}
 
 \item{n_blocks}{Number of blocks to divide data into.}
 
-\item{...}{Additiona parameters are passed to \code{\link{rstan::sampling}}}
+\item{...}{Additional parameters are passed to \code{\link[rstan]{sampling}}}
 }
 \value{
 A \code{stanfit} object with the fitted stan model.

@@ -9,7 +9,7 @@ NULL
 #' stan to draw samples from the prior beliefs that match the behavior.
 #'
 #' @inheritParams prepare_data_incremental_suff_stats
-#' @param ... Additiona parameters are passed to \code{\link{rstan::sampling}}
+#' @param ... Additional parameters are passed to \code{\link[rstan]{sampling}}
 #'
 #' @return A \code{stanfit} object with the fitted stan model.
 #'
