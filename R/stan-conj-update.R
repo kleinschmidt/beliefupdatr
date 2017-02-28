@@ -17,25 +17,27 @@ NULL
 #' @seealso \code{\link{extract_prior_samples}} to get a data frame of samples
 #'   from the prior belief parameters.
 #' @export
-infer_prior_beliefs <- function(training, test, cue,
-                                category, response, group,
+infer_prior_beliefs <- function(df, cue, category, response, condition, ranefs,
                                 n_blocks, ...) {
 
+  walk(c(cue, category, response, condition, ranefs),
+       ~ assert_that(has_name(df, .x)))
+
   if (missing(n_blocks)) {
-    dat <- prepare_data_conj_suff_stats_infer_prior(training,
-                                                    test,
+    dat <- prepare_data_conj_suff_stats_infer_prior(df,
                                                     cue,
                                                     category,
                                                     response,
-                                                    group)
+                                                    condition,
+                                                    ranefs)
     mod <- stanmodels[['conj_id_lapsing_sufficient_stats_fit']]
   } else {
-    dat <- prepare_data_incremental_suff_stats(training,
-                                               test,
+    dat <- prepare_data_incremental_suff_stats(df,
                                                cue,
                                                category,
                                                response,
-                                               group,
+                                               condition,
+                                               ranefs,
                                                n_blocks)
     mod <- stanmodels[['conj_id_lapsing_sufficient_stats_incremental_fit']]
   }
@@ -45,10 +47,15 @@ infer_prior_beliefs <- function(training, test, cue,
 }
 
 
-check_training_data <- function(training, category, group) {
-  training[[category]] <- training[[category]] %>% as.factor() %>% droplevels()
-  training[[group]] <- training[[group]] %>% as.factor() %>% droplevels()
-  return(training)
+# reduce training data by taking first ranef grouping (e.g., subject) within
+# each condition, and normalize factors
+prepare_training <- function(df, category, condition, ranefs) {
+  df %>%
+    group_by_(condition) %>%
+    filter_(.dots = map(ranefs, 
+                        ~ lazyeval::interp(~ x == first(x), x=as.name(.x)))) %>%
+    mutate_each_(funs(. %>% as.factor() %>% droplevels()),
+                 c(category, condition))
 }
 
 test_counts <- function(training, test, cue, category, response, group) {
@@ -76,58 +83,6 @@ test_counts <- function(training, test, cue, category, response, group) {
 
 # Support functions for conjugate belief updating
 
-#' Convert data to stan input for conjugate prior inference
-#'
-#' See exec/conj_id_lapsing_fit.stan for data format expected
-#'
-#' @param training Data frame with training data: 'cue', 'category', and
-#'   'subject'.
-#' @param test Data frame with test data: 'cue', 'response', and 'subject'
-#' @param cue (Quoted) name of columns in training and test which have the cue
-#'   values.
-#' @param category (Quoted) name of column in training data with the correct
-#'   category labels.
-#' @param response (Quoted) name of column in test data with responses
-#' @param group (Quoted) name of column with group identifiers
-#'
-#' @return a list with elements: x, y, z (training cues, subjects, and
-#'   categories), n, m, l (number of observations, subject, and categories),
-#'   x_test, y_test, z_test, and n_test.
-#'
-#' @examples
-#' \dontrun{
-#' supunsup::supunsup_clean %>%
-#'   filter(supCond == 'unsupervised') %>%
-#'   prepare_data_conj_infer_prior(training=., test=.,
-#'                                 'vot', 'trueCat', 'respCat', 'subject')
-#' }
-#' @export
-prepare_data_conj_infer_prior <- function(training, test,
-                                          cue, category, response, group) {
-
-  training <- check_training_data(training, category, group)
-  test_counts <- test_counts(training, test, cue, category, response, group)
-
-  within(list(), {
-    x <- training[[cue]]
-    y <- as.numeric(training[[group]])
-    z <- as.numeric(training[[category]])
-
-    n <- length(x)                        # num training observations
-    m <- length(unique(z))                # num categories
-    l <- length(unique(y))                # num groups
-
-    x_test <- test_counts[[cue]]
-    y_test <- as.numeric(test_counts[[group]])
-    z_test_counts <-
-      test_counts %>%
-      select_(.dots=levels(training[[category]])) %>%
-      as.matrix()
-
-    n_test <- length(x_test)
-  })
-}
-
 ## generate category-by-subject matrix of sufficient stats
 training_ss_matrix <- function(training, groupings, cue, ...) {
   training_ss <-
@@ -143,33 +98,43 @@ training_ss_matrix <- function(training, groupings, cue, ...) {
 
 #' Convert data into format for bulk updating with sufficient statistics
 #'
-#' Like \code{\link{prepare_data_conj_infer_prior}}, but for sufficient
-#' statistics for training data (count, mean, and sample standard deviation)
-#' instead of raw training observations.
+#' For Stan models that are based on sufficient statistics for training data
+#' (count, mean, and sample standard deviation) instead of raw training
+#' observations.
 #'
-#' @inheritParams prepare_data_conj_infer_prior
+#' @param df Data frame with adaptation data
+#' @param cue (Quoted) name of columns in training and test which have the cue
+#'   values.
+#' @param category (Quoted) name of column in training data with the correct
+#'   category labels.
+#' @param response (Quoted) name of column in test data with responses
+#' @param condition (Quoted) name of column with group identifiers
+#' @param ranefs (Quoted) name of column(s) with random effect grouping
+#'   variables (like subject IDs).
 #'
 #' @return A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
 #'
 #' @export
-prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
-                                                     category, response, group) {
+prepare_data_conj_suff_stats_infer_prior <- function(df, cue, category,
+                                                     response, condition,
+                                                     ranefs) {
 
-  training <- check_training_data(training, category, group)
-  test_counts <- test_counts(training, test, cue, category, response, group)
+  training <- prepare_training(df, category, condition, ranefs)
+
+  test_counts <- test_counts(training, df, cue, category, response, condition)
 
   categories <- training[[category]] %>% levels()
 
   ## need category-by-subject/group matrices of sufficient stats
   training %>%
-    training_ss_matrix(list(category, group), cue,
+    training_ss_matrix(list(category, condition), cue,
                        xbar = mean, n = length, xsd = sd) %>%
     within({
       m <- dim(xbar)[1]
       l <- dim(xbar)[2]
 
       x_test <- test_counts[[cue]]
-      y_test <- as.numeric(test_counts[[group]])
+      y_test <- test_counts[[condition]] %>% as.numeric()
       z_test_counts <-
         test_counts %>%
         select_(.dots=levels(training[[category]])) %>%
@@ -195,17 +160,16 @@ prepare_data_conj_suff_stats_infer_prior <- function(training, test, cue,
 #'
 #' For now, the total number of trials in training and test need to be equal.
 #'
-#' @inheritParams prepare_data_conj_infer_prior
+#' @inheritParams prepare_data_conj_suff_stats_infer_prior
 #' @param n_blocks Number of blocks to divide data into.
 #'
 #' @return A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
 #'
 #' @export
-prepare_data_incremental_suff_stats <- function(training, test, cue, category,
-                                                response, group, n_blocks) {
-  assert_that(max(training$trial) == max(test$trial))
+prepare_data_incremental_suff_stats <- function(df, cue, category, response,
+                                                condition, ranefs, n_blocks) {
 
-  test %>%
+  df %>%
     select(trial) %>%
     mutate(block = ntile(trial, n_blocks)) %>%
     group_by(block) %>%
@@ -215,8 +179,11 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
     blocks
 
   # calculate overall summary statistics
-  training <- check_training_data(training, category, group)
-  ss <- training_ss_matrix(training, list(category, group), cue,
+  training <- prepare_training(df, category, condition, ranefs)
+
+  # sufficient stats for each condition
+  ss <- training_ss_matrix(training, groupings = list(category, condition), 
+                           cue = cue,
                            xbar = mean, n = length, xsd = sd)
 
   # expand sufficient stats over blocks (just by adjusting the counts, as if
@@ -232,13 +199,13 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
   # the trick is to line up the group numbers. but the way they're generated for
   # the training data means that you can do group_num +
   test_counts_blocks <-
-    test %>%
+    df %>%
     mutate(block = cut(trial, breaks=c(min(trial)-1, blocks[['max_trial']]),
                                        labels=FALSE)) %>%
     group_by(block) %>%
     nest() %>%
     mutate(counts=map(data,
-                      ~ test_counts(training, ., cue, category, response, group))) %>%
+                      ~ test_counts(training, ., cue, category, response, condition))) %>%
     unnest(counts)
 
   within(ss_blocks, {
@@ -247,7 +214,7 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
     l <- dim(xbar)[3]
 
     x_test <- test_counts_blocks[[cue]]
-    y_test <- test_counts_blocks[[group]] %>% as.numeric()
+    y_test <- test_counts_blocks[[condition]] %>% as.numeric()
     block_test <- test_counts_blocks[['block']]
     z_test_counts <-
       test_counts_blocks %>%

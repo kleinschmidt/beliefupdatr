@@ -4,14 +4,11 @@
 \alias{prepare_data_conj_suff_stats_infer_prior}
 \title{Convert data into format for bulk updating with sufficient statistics}
 \usage{
-prepare_data_conj_suff_stats_infer_prior(training, test, cue, category,
-  response, group)
+prepare_data_conj_suff_stats_infer_prior(df, cue, category, response, condition,
+  ranefs)
 }
 \arguments{
-\item{training}{Data frame with training data: 'cue', 'category', and
-'subject'.}
-
-\item{test}{Data frame with test data: 'cue', 'response', and 'subject'}
+\item{df}{Data frame with adaptation data}
 
 \item{cue}{(Quoted) name of columns in training and test which have the cue
 values.}
@@ -21,13 +18,16 @@ category labels.}
 
 \item{response}{(Quoted) name of column in test data with responses}
 
-\item{group}{(Quoted) name of column with group identifiers}
+\item{condition}{(Quoted) name of column with group identifiers}
+
+\item{ranefs}{(Quoted) name of column(s) with random effect grouping
+variables (like subject IDs).}
 }
 \value{
 A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
 }
 \description{
-Like \code{\link{prepare_data_conj_infer_prior}}, but for sufficient
-statistics for training data (count, mean, and sample standard deviation)
-instead of raw training observations.
+For Stan models that are based on sufficient statistics for training data
+(count, mean, and sample standard deviation) instead of raw training
+observations.
 }

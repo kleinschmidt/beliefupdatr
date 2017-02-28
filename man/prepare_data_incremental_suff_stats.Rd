@@ -4,14 +4,11 @@
 \alias{prepare_data_incremental_suff_stats}
 \title{Convert data into format for incremental updating with sufficient statistics}
 \usage{
-prepare_data_incremental_suff_stats(training, test, cue, category, response,
-  group, n_blocks)
+prepare_data_incremental_suff_stats(df, cue, category, response, condition,
+  ranefs, n_blocks)
 }
 \arguments{
-\item{training}{Data frame with training data: 'cue', 'category', and
-'subject'.}
-
-\item{test}{Data frame with test data: 'cue', 'response', and 'subject'}
+\item{df}{Data frame with adaptation data}
 
 \item{cue}{(Quoted) name of columns in training and test which have the cue
 values.}
@@ -21,7 +18,10 @@ category labels.}
 
 \item{response}{(Quoted) name of column in test data with responses}
 
-\item{group}{(Quoted) name of column with group identifiers}
+\item{condition}{(Quoted) name of column with group identifiers}
+
+\item{ranefs}{(Quoted) name of column(s) with random effect grouping
+variables (like subject IDs).}
 
 \item{n_blocks}{Number of blocks to divide data into.}
 }

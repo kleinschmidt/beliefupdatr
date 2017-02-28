@@ -7,14 +7,12 @@ d <- supunsup::supunsup_clean %>% filter(supCond == 'unsupervised')
 
 test_that('Data converts for incremental update', {
 
-  d_inc <- prepare_data_incremental_suff_stats(training = d %>%
-                                                 group_by(bvotCond) %>%
-                                                 filter(subject == first(subject)),
-                                               test = d,
+  d_inc <- prepare_data_incremental_suff_stats(df = d,
                                                cue = 'vot',
                                                category = 'trueCat',
                                                response = 'respCat',
-                                               group = 'bvotCond',
+                                               condition = 'bvotCond',
+                                               ranefs = 'subject',
                                                n_blocks = 10)
 
   expect_that(d_inc, has_names(c('xbar', 'n', 'xsd', 'l', 'm', 'k',
