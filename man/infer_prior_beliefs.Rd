@@ -4,14 +4,11 @@
 \alias{infer_prior_beliefs}
 \title{Infer prior beliefs based on adaptation behavior}
 \usage{
-infer_prior_beliefs(training, test, cue, category, response, group, n_blocks,
+infer_prior_beliefs(df, cue, category, response, condition, ranefs, n_blocks,
   ...)
 }
 \arguments{
-\item{training}{Data frame with training data: 'cue', 'category', and
-'subject'.}
-
-\item{test}{Data frame with test data: 'cue', 'response', and 'subject'}
+\item{df}{Data frame with adaptation data}
 
 \item{cue}{(Quoted) name of columns in training and test which have the cue
 values.}
@@ -21,7 +18,10 @@ category labels.}
 
 \item{response}{(Quoted) name of column in test data with responses}
 
-\item{group}{(Quoted) name of column with group identifiers}
+\item{condition}{(Quoted) name of column with group identifiers}
+
+\item{ranefs}{(Quoted) name of column(s) with random effect grouping
+variables (like subject IDs).}
 
 \item{n_blocks}{Number of blocks to divide data into.}
 
