@@ -32,7 +32,7 @@ install.packages('devtools')
 Second, install this package from github.
 
 ```r
-devtools::install_github('kleinschmidt/beliefupdatr')
+devtools::install_github('kleinschmidt/beliefupdatr', args = "--preclean")
 ```
 
 If you want to build the vignettes (long-form documentation), there are
@@ -40,7 +40,7 @@ additional dependencies.  To install this package with optional dependencies
 (`Suggests` in the `DESCRIPTION` file) and build the vignettes:
 
 ```r
-devtools::install_github('kleinschmidt/beliefupdatr',
+devtools::install_github('kleinschmidt/beliefupdatr', args = "--preclean",
                          dependencies=TRUE, build_vignettes=TRUE)
 ```
 

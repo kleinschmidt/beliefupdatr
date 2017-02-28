@@ -6,7 +6,6 @@ Description: Modeling phonetic adaptation as belief updating requires some
     distributions and utility functions. Here they are.
 Depends:
     R (>= 3.3),
-    Rcpp (>= 0.12.9),
     methods
 Imports:
     purrr (>= 0.2.2),
@@ -18,7 +17,8 @@ Imports:
     reshape2 (>= 1.4.2),
     rstan (>= 2.14.1),
     rstantools (>= 1.1.0),
-    abind
+    abind,
+    Rcpp (>= 0.12.9)
 Remotes:
     kleinschmidt/daver,
     kleinschmidt/phonetic-sup-unsup
