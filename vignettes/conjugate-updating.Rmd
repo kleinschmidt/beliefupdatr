@@ -36,57 +36,6 @@ d <- supunsup::supunsup_clean %>%
 
 ```
 
-To fit this model with stan, we need to convert the tabular data to a stan-friendly format, a list of the variables declared in teh `data` block of the stan model, which in this case looks like this:
-
-```stan
-data {
-  int n;                        // number of training observations
-  real x[n];                    // training observations
-  int m;                        // number of categories
-  int z[n];                     // categories of each training observation
-  int l;                        // number of subjects
-  int y[n];                     // subject labels
-  int n_test;                   // number of test trials
-  real x_test[n_test];          // locations of test trials
-  int y_test[n_test];           // subject labels for test trials
-  int z_test_counts[n_test,m];  // responses for test trials
-}
-```
-
-The `prepare_data_conj_infer_prior` function automates this process.  You just need to provide training and test data, and tell it the column names for the cues, true and response categories, and groups (subjects or conditions).
-
-```{r stan-data}
-
-d_stan <- d %>%
-  beliefupdatr::prepare_data_conj_infer_prior(training=.,
-                                              test=.,
-                                              cue='vot',
-                                              category='trueCat',
-                                              response='respCat',
-                                              group='subject')
-
-str(d_stan)
-
-```
-
-This is the data as it was fit originally, but there's a hidden inefficiency here: it's computing test responses separately for each subject, but using exactly the same input statistics for subjects within each condition.  So we can substantially speed things up by summarizing the data by condition instead of subject:
-
-```{r stan-data-little}
-
-d_stan_little <- d %>%
-  group_by(bvotCond) %>%
-  filter(subject == first(subject)) %>%
-  prepare_data_conj_infer_prior(training=.,
-                                test=d,
-                                cue='vot',
-                                category='trueCat',
-                                response='respCat',
-                                group='bvotCond')
-
-str(d_stan_little)
-
-```
-
 # Fit the model
 
 ## Getting ready
@@ -119,16 +68,15 @@ This package provides the function `infer_prior_beliefs` that wraps the process 
 
 ```{r fit-model-again}
 
-fit <- d %>%
-  group_by(bvotCond) %>%
-  filter(subject == first(subject)) %>%
-  infer_prior_beliefs(training=.,
-                      test=d,
-                      cue='vot',
-                      category='trueCat',
-                      response='respCat',
-                      group='bvotCond',
-                      chains = 4, iter = 500)
+fit <- infer_prior_beliefs(df = d,
+                           cue = 'vot',
+                           category = 'trueCat',
+                           response = 'respCat',
+                           condition = 'bvotCond',
+                                        # use first subject in each condition
+                                        # to determine exposure statistics:
+                           ranefs = 'subject',
+                           chains = 4, iter = 500)
 
 ```
 
@@ -175,14 +123,14 @@ assuming that many blocks:
 ```{r fit-inc-10}
 
 fit_inc <-
-  d %>%
-  group_by(bvotCond) %>%
-  filter(subject == first(subject)) %>%
-  infer_prior_beliefs(training = ., test = d,
+  infer_prior_beliefs(df = d,
                       cue = 'vot',
                       category = 'trueCat',
                       response = 'respCat',
-                      group = 'bvotCond',
+                      condition = 'bvotCond',
+                                        # use first subject in each condition
+                                        # to determine exposure statistics:
+                      ranefs = 'subject',
                       n_blocks = 10,    # discretize trials into 10 blocks
                       iter = 500, chains = 4, init = 0) %T>%
   print(digits=1, pars=c('kappa_0', 'nu_0', 'mu_0', 'sigma_0', 'lapse_rate'))
