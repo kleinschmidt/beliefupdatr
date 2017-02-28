@@ -5,9 +5,9 @@ Authors@R: person("Dave", "Kleinschmidt", email = "dave.f.kleinschmidt@gmail.com
 Description: Modeling phonetic adaptation as belief updating requires some
     distributions and utility functions. Here they are.
 Depends:
-    R (>= 3.2.3),
+    R (>= 3.3),
     Rcpp (>= 0.12.9),
-    methods (>= 3.3.2)
+    methods
 Imports:
     purrr (>= 0.2.2),
     assertthat (>= 0.1),
@@ -38,3 +38,4 @@ Suggests: testthat (>= 1.0.2),
     daver (>= 0.0.0.9000),
     devtools (>= 1.12.0)
 VignetteBuilder: knitr
+NeedsCompilation: yes
