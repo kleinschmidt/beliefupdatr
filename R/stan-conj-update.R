@@ -205,6 +205,15 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
                                                 response, group, n_blocks) {
   assert_that(max(training$trial) == max(test$trial))
 
+  test %>%
+    select(trial) %>%
+    mutate(block = ntile(trial, n_blocks)) %>%
+    group_by(block) %>%
+    summarise(max_trial = max(trial),
+              min_trial = min(trial),
+              mid_trial = (max_trial + min_trial)/2) ->
+    blocks
+
   # calculate overall summary statistics
   training <- check_training_data(training, category, group)
   ss <- training_ss_matrix(training, list(category, group), cue,
@@ -213,17 +222,19 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
   # expand sufficient stats over blocks (just by adjusting the counts, as if
   # they've seen up to half the current block's worth of training data)
   ss_blocks <-
-    map(seq_len(n_blocks), ~ update_list(ss, n = ~ n / n_blocks * (.x-0.5))) %>%
+    blocks[['mid_trial']] %>%
+    map(~ within(ss, n[] <- .x)) %>%      # fill n array, preserving names
     transpose() %>%
-    map(lift(abind), along=3) %>%
-    map(aperm, c(3,1,2))
+    map(lift(abind), along=3) %>%       # make 3D array of block suff stats
+    map(aperm, c(3,1,2))                # make block as first dimension
 
   # generate test counts broken out by block
   # the trick is to line up the group numbers. but the way they're generated for
   # the training data means that you can do group_num +
   test_counts_blocks <-
     test %>%
-    mutate(block = ntile(trial, n_blocks)) %>%
+    mutate(block = cut(trial, breaks=c(min(trial)-1, blocks[['max_trial']]),
+                                       labels=FALSE)) %>%
     group_by(block) %>%
     nest() %>%
     mutate(counts=map(data,
@@ -244,7 +255,8 @@ prepare_data_incremental_suff_stats <- function(training, test, cue, category,
       as.matrix()
 
     n_test <- length(x_test)
-  })
+  }) %>%
+  structure(blocks = blocks)
 
 }
 
