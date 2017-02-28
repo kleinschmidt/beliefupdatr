@@ -27,7 +27,7 @@ variables (like subject IDs).}
 A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
 }
 \description{
-Like \code{\link{prepare_data_conj_infer_prior}}, but for sufficient
-statistics for training data (count, mean, and sample standard deviation)
-instead of raw training observations.
+For Stan models that are based on sufficient statistics for training data
+(count, mean, and sample standard deviation) instead of raw training
+observations.
 }
