@@ -20,7 +20,8 @@ NULL
 infer_prior_beliefs <- function(df, cue, category, response, condition, ranefs,
                                 n_blocks, ...) {
 
-  assert_that(df, has_names(cue, category, response, condition, ranefs))
+  walk(c(cue, category, response, condition, ranefs),
+       ~ assert_that(has_name(df, .x)))
 
   if (missing(n_blocks)) {
     dat <- prepare_data_conj_suff_stats_infer_prior(df,
