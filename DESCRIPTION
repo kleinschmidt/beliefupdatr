@@ -1,6 +1,6 @@
 Package: beliefupdatr
 Title: Belief updating for phonetic adaptation
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: person("Dave", "Kleinschmidt", email = "dave.f.kleinschmidt@gmail.com", role = c("aut", "cre"))
 Description: Modeling phonetic adaptation as belief updating requires some
     distributions and utility functions. Here they are.
