@@ -190,7 +190,8 @@ prepare_data_incremental_suff_stats <- function(df, cue, category, response,
   # they've seen up to half the current block's worth of training data)
   ss_blocks <-
     blocks[['mid_trial']] %>%
-    map(~ within(ss, n[] <- .x)) %>%      # fill n array, preserving names
+                                        # fill n array, preserving names
+    map(~ within(ss, n[] <- .x/dim(n)[1])) %>%
     transpose() %>%
     map(lift(abind), along=3) %>%       # make 3D array of block suff stats
     map(aperm, c(3,1,2))                # make block as first dimension
