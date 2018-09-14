@@ -1,7 +1,8 @@
 #' @import assertthat purrr
-#' @importFrom dplyr %>% mutate summarise summarise_each summarise_each_ group_by group_by_ ungroup tally select select_
+#' @importFrom dplyr %>% mutate summarise summarise_at group_by group_by_ ungroup tally select select_
 #' @importFrom tidyr spread spread_ gather gather_ nest unnest
 #' @importFrom utils tail
+#' @importFrom rlang sym syms expr
 NULL
 
 
@@ -70,15 +71,9 @@ belief_update_batch <- function(d, cue, categories, trials, at, beliefs) {
   assert_that(max(d[[trials]]) >= max(at))
   assert_that(is_empty(setdiff(d[[categories]], names(beliefs))))
 
-  # splice in name of trials column in cut_at() expression
-  grouping <-
-    lazyeval::interp(~ cut_at(trs, at), trs=as.name(trials)) %>%
-    list() %>%
-    set_names(trials)
-
   # cut, summarise by category, and update
   d %>%
-    group_by_(.dots=grouping) %>%
+    group_by(!!sym(trials) := cut_at(!!sym(trials), at)) %>%
     nest() %>%
     mutate(beliefs = map(data, ~ split(.[[cue]], .[[categories]]) %>%
                                  map(summary_stats)) %>%

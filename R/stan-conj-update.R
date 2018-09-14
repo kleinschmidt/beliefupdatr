@@ -51,11 +51,10 @@ infer_prior_beliefs <- function(df, cue, category, response, condition, ranefs,
 # each condition, and normalize factors
 prepare_training <- function(df, category, condition, ranefs) {
   df %>%
-    group_by_(condition) %>%
-    filter_(.dots = map(ranefs, 
-                        ~ lazyeval::interp(~ x == first(x), x=as.name(.x)))) %>%
-    mutate_each_(funs(. %>% as.factor() %>% droplevels()),
-                 c(category, condition))
+    group_by(!! sym(condition)) %>%
+    filter(!!!map(syms(ranefs), ~ expr(!!.x == first(!!.x)))) %>%
+    ungroup() %>%
+    mutate_at(c(category, condition), . %>% as.factor() %>% droplevels())
 }
 
 test_counts <- function(training, test, cue, category, response, group) {
@@ -88,7 +87,7 @@ training_ss_matrix <- function(training, groupings, cue, ...) {
   training_ss <-
     training %>%
     group_by_(.dots=groupings) %>%
-    summarise_each_(funs=funs(...), cue)
+    summarise_at(cue, funs(...))
 
   stats <- names(list(...))
 
