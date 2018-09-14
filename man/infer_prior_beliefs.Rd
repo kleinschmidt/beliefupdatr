@@ -4,8 +4,8 @@
 \alias{infer_prior_beliefs}
 \title{Infer prior beliefs based on adaptation behavior}
 \usage{
-infer_prior_beliefs(df, cue, category, response, condition, ranefs, n_blocks,
-  ...)
+infer_prior_beliefs(df, cue, category, response, condition, ranefs,
+  n_blocks, ...)
 }
 \arguments{
 \item{df}{Data frame with adaptation data}

@@ -4,7 +4,8 @@
 \alias{extract_prior_samples}
 \title{Extract sampled prior beliefs from fitted model to a data_frame}
 \usage{
-extract_prior_samples(fitted, cat_levels, samples = rstan::extract(fitted))
+extract_prior_samples(fitted, cat_levels,
+  samples = rstan::extract(fitted))
 }
 \arguments{
 \item{fitted}{Fitted stan model for inferring prior}

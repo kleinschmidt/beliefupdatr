@@ -4,8 +4,8 @@
 \alias{nix2_marginal_lhood}
 \title{Marginal likelihood function}
 \usage{
-nix2_marginal_lhood(p, x = NA, n = length(x), xbar = mean(x), ss = s2 *
-  (n - 1), s2 = var(x), log = FALSE)
+nix2_marginal_lhood(p, x = NA, n = length(x), xbar = mean(x),
+  ss = s2 * (n - 1), s2 = var(x), log = FALSE)
 }
 \arguments{
 \item{p}{named list of distribution parameters (mu, sigma2, nu, and kappa)}

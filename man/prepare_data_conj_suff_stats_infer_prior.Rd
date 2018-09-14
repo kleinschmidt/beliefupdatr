@@ -4,8 +4,8 @@
 \alias{prepare_data_conj_suff_stats_infer_prior}
 \title{Convert data into format for bulk updating with sufficient statistics}
 \usage{
-prepare_data_conj_suff_stats_infer_prior(df, cue, category, response, condition,
-  ranefs)
+prepare_data_conj_suff_stats_infer_prior(df, cue, category, response,
+  condition, ranefs)
 }
 \arguments{
 \item{df}{Data frame with adaptation data}
