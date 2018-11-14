@@ -234,7 +234,14 @@ rename_dims <- function(x, var, new_names) {
   return(x)
 }
 
-# helper function to melt a mult-dimensional array of samples into a df
+
+#' Melt a mult-dimensional array of samples into a df
+#'
+#' @param samples Named list of samples (like returned by rstan::extract)
+#' @param varname Name of variable whose samples to melt
+#'
+#' @return A tidy dataframe of samples
+#' @export
 melt_samples <- function(samples, varname) {
   reshape2::melt(samples[[varname]], value.name=varname) %>%
     tbl_df
