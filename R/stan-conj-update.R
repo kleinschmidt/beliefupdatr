@@ -29,7 +29,8 @@ infer_prior_beliefs <- function(df, cue, category, response, condition, ranefs,
                                                     category,
                                                     response,
                                                     condition,
-                                                    ranefs)
+                                                    ranefs,
+                                                    test_df)
     mod <- stanmodels[['conj_id_lapsing_sufficient_stats_fit']]
   } else {
     dat <- prepare_data_incremental_suff_stats(df,
@@ -38,7 +39,8 @@ infer_prior_beliefs <- function(df, cue, category, response, condition, ranefs,
                                                response,
                                                condition,
                                                ranefs,
-                                               n_blocks)
+                                               n_blocks,
+                                               test_df)
     mod <- stanmodels[['conj_id_lapsing_sufficient_stats_incremental_fit']]
   }
 
