@@ -5,7 +5,7 @@
 \title{Convert data into format for incremental updating with sufficient statistics}
 \usage{
 prepare_data_incremental_suff_stats(df, cue, category, response, condition,
-  ranefs, n_blocks)
+  ranefs, n_blocks, test_df = df)
 }
 \arguments{
 \item{df}{Data frame with adaptation data}
@@ -24,6 +24,9 @@ category labels.}
 variables (like subject IDs).}
 
 \item{n_blocks}{Number of blocks to divide data into.}
+
+\item{test_df}{(optional) data frame with test data (all data is used as test
+by default).}
 }
 \value{
 A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.

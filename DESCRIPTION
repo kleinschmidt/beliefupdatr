@@ -1,6 +1,6 @@
 Package: beliefupdatr
 Title: Belief updating for phonetic adaptation
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: person("Dave", "Kleinschmidt", email = "dave.f.kleinschmidt@gmail.com", role = c("aut", "cre"))
 Description: Modeling phonetic adaptation as belief updating requires some
     distributions and utility functions. Here they are.
@@ -31,7 +31,7 @@ LinkingTo:
     StanHeaders (>= 2.17.2)
 License: GPL (>=3)
 LazyData: true
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Suggests: testthat (>= 1.0.2),
     knitr (>= 1.15.1),
     rmarkdown (>= 1.3),

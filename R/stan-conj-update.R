@@ -18,7 +18,7 @@ NULL
 #'   from the prior belief parameters.
 #' @export
 infer_prior_beliefs <- function(df, cue, category, response, condition, ranefs,
-                                n_blocks, ...) {
+                                n_blocks, test_df=df, ...) {
 
   walk(c(cue, category, response, condition, ranefs),
        ~ assert_that(has_name(df, .x)))
@@ -110,13 +110,15 @@ training_ss_matrix <- function(training, groupings, cue, ...) {
 #' @param condition (Quoted) name of column with group identifiers
 #' @param ranefs (Quoted) name of column(s) with random effect grouping
 #'   variables (like subject IDs).
+#' @param test_df (optional) data frame with test data (all data is used as test
+#'   by default).
 #'
 #' @return A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.
 #'
 #' @export
 prepare_data_conj_suff_stats_infer_prior <- function(df, cue, category,
                                                      response, condition,
-                                                     ranefs) {
+                                                     ranefs, test_df=df) {
 
   training <- prepare_training(df, category, condition, ranefs)
 
@@ -166,16 +168,16 @@ prepare_data_conj_suff_stats_infer_prior <- function(df, cue, category,
 #'
 #' @export
 prepare_data_incremental_suff_stats <- function(df, cue, category, response,
-                                                condition, ranefs, n_blocks) {
+                                                condition, ranefs, n_blocks,
+                                                test_df = df) {
 
-  df %>%
+  blocks <-  df %>%
     select(trial) %>%
     mutate(block = ntile(trial, n_blocks)) %>%
     group_by(block) %>%
     summarise(max_trial = max(trial),
               min_trial = min(trial),
-              mid_trial = (max_trial + min_trial)/2) ->
-    blocks
+              mid_trial = (max_trial + min_trial)/2)
 
   # calculate overall summary statistics
   training <- prepare_training(df, category, condition, ranefs)
@@ -199,7 +201,7 @@ prepare_data_incremental_suff_stats <- function(df, cue, category, response,
   # the trick is to line up the group numbers. but the way they're generated for
   # the training data means that you can do group_num +
   test_counts_blocks <-
-    df %>%
+    test_df %>%
     mutate(block = cut(trial, breaks=c(min(trial)-1, blocks[['max_trial']]),
                                        labels=FALSE)) %>%
     group_by(block) %>%

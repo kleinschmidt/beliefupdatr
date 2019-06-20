@@ -5,7 +5,7 @@
 \title{Convert data into format for bulk updating with sufficient statistics}
 \usage{
 prepare_data_conj_suff_stats_infer_prior(df, cue, category, response,
-  condition, ranefs)
+  condition, ranefs, test_df = df)
 }
 \arguments{
 \item{df}{Data frame with adaptation data}
@@ -22,6 +22,9 @@ category labels.}
 
 \item{ranefs}{(Quoted) name of column(s) with random effect grouping
 variables (like subject IDs).}
+
+\item{test_df}{(optional) data frame with test data (all data is used as test
+by default).}
 }
 \value{
 A list of data for 'conj_id_lapsing_sufficient_stats_fit.stan'.

@@ -5,7 +5,7 @@
 \title{Infer prior beliefs based on adaptation behavior}
 \usage{
 infer_prior_beliefs(df, cue, category, response, condition, ranefs,
-  n_blocks, ...)
+  n_blocks, test_df = df, ...)
 }
 \arguments{
 \item{df}{Data frame with adaptation data}
@@ -24,6 +24,9 @@ category labels.}
 variables (like subject IDs).}
 
 \item{n_blocks}{Number of blocks to divide data into.}
+
+\item{test_df}{(optional) data frame with test data (all data is used as test
+by default).}
 
 \item{...}{Additional parameters are passed to \code{\link[rstan]{sampling}}}
 }
