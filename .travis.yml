@@ -8,8 +8,6 @@ env:
 
 before_install:
   - mkdir -p ~/.R/
-  - echo "CXX = `R CMD config CXX`" >> ~/.R/Makevars
-  - echo "CXXFLAGS = `R CMD config CXXFLAGS` -pedantic -g0" >> ~/.R/Makevars
   - echo "CXX14 = `R CMD config CXX14`" >> ~/.R/Makevars
   - echo "CXX14FLAGS = `R CMD config CXX14FLAGS` -pedantic -g0"
   - export CLANG_EXTRA_ARG=""
