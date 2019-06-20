@@ -28,7 +28,7 @@ test_that("Incremental and batch updating are equivalent", {
 })
 
 test_that("Batch updating checks column names", {
-  expect_error(belief_update_batch(d, 'xx'), 'd does not have name xx')
-  expect_error(belief_update_batch(d, 'x', 'cc'), 'd does not have name cc')
-  expect_error(belief_update_batch(d, 'x', 'c', 't'), 'd does not have name t')
+  expect_error(belief_update_batch(d, 'xx'), "d does not have all of these name(s): 'xx'")
+  expect_error(belief_update_batch(d, 'x', 'cc'), "d does not have all of these name(s): 'cc'")
+  expect_error(belief_update_batch(d, 'x', 'c', 't'), "d does not have all of these name(s): 't'")
 })
