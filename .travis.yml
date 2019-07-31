@@ -8,12 +8,8 @@ env:
 
 before_install:
   - mkdir -p ~/.R/
-  - echo "CXX14 = `R CMD config CXX14`" >> ~/.R/Makevars
-  - echo "CXX14FLAGS = `R CMD config CXX14FLAGS` -pedantic -g0"
-  - export CLANG_EXTRA_ARG=""
-  - if [[ $CXX = "clang++" ]] ;  then export CLANG_EXTRA_ARG=" -Qunused-arguments -fcolor-diagnostics " ; fi
-  - sed -i.bak "s/ g++/ ${CXX}${CLANG_EXTRA_ARG}/" ~/.R/Makevars
-  - sed -i.bak "s/O[0-3]/O$CXX_OLEVEL/" ~/.R/Makevars
+  - echo "CXX14FLAGS=-O3 -mtune=native -march=native -Wno-unused-variable -Wno-unused-function  -Wno-macro-redefined" >> ~/.R/Makevars
+  - echo "CXX14=g++ -std=c++1y -fPIC" >> ~/.R/Makevars
 
 notifications:
   email: false
