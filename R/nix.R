@@ -96,9 +96,9 @@ is_nix2_params <- function(p) {
   assert_that(has_name(p, 'mu'))
   assert_that(has_name(p, 'sigma2'))
 
-  assert_that(p$nu >= 0)
-  assert_that(p$kappa >= 0)
-  assert_that(p$sigma2 >= 0)
+  assert_that(all(p$nu >= 0))
+  assert_that(all(p$kappa >= 0))
+  assert_that(all(p$sigma2 >= 0))
   TRUE
 }
 
